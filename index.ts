@@ -3,7 +3,7 @@ import Faker from "./faker/faker";
 import UserSeeder from "./seeder/UserSeeder";
 
 function main() {
-    UserSeeder(10000);
+    UserSeeder(10000)
 }
 
 main();
