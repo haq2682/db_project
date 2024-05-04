@@ -1,10 +1,9 @@
-import {Faker} from "./faker/faker";
+import './db_config/config';
+import Faker from "./faker/faker";
+import UserSeeder from "./seeder/UserSeeder";
 
 function main() {
-    for(let i = 0; i < 10; i++) {
-        let name = Faker.firstName();
-        console.log(name);
-    } 
+    UserSeeder(10000);
 }
 
 main();
