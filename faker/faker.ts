@@ -41,6 +41,21 @@ const Faker = {
             result += characters.charAt(Math.floor(Math.random() * characters.length));
         }
         return result;
+    },
+    address: ():string => {
+        const streetNames:string[] = ['Main St', 'Elm St', 'Oak St', 'Maple Ave', 'Cedar Ln'];
+        const cities:string[] = ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix'];
+        const states:string[] = ['NY', 'CA', 'IL', 'TX', 'AZ'];
+        const postalCode:number = Math.floor(Math.random() * (99999 - 10000 + 1)) + 10000;
+
+        const randomStreet:string = streetNames[Math.floor(Math.random() * streetNames.length)];
+        const randomCity:string = cities[Math.floor(Math.random() * cities.length)];
+        const randomState:string = states[Math.floor(Math.random() * states.length)];
+
+        return `${randomStreet}, ${randomCity}, ${randomState} ${postalCode}`;
+    },
+    username: ():string => {
+        return `${lastNames[Math.floor(Math.random() * lastNames.length)]}${Math.floor(Math.random()*10000)}`;
     }
 }
 
