@@ -1,9 +1,11 @@
-import './db_config/config';
-import Faker from "./faker/faker";
-import UserSeeder from "./seeder/UserSeeder";
+import {connectToDatabase} from './db_config/config';
+import prompt from 'prompt-sync';
 
-function main() {
-    UserSeeder(10000)
+async function main() {
+    await connectToDatabase();
+    let promptSync = prompt();
+    let r = promptSync("Press enter key to exit the program...");
+    process.exit();
 }
 
 main();

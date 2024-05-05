@@ -1,6 +1,5 @@
 import mysql, { Connection, MysqlError } from 'mysql';
 
-// Create a connection pool
 const sql = mysql.createConnection({
     host: 'localhost',
     user: 'root',
@@ -8,9 +7,14 @@ const sql = mysql.createConnection({
     database: 'pharmacy'
 });
 
-sql.connect(function(error) {
-    if(error) throw error;
-    console.log('Connected to the MySQL');
-});
+export async function connectToDatabase() {
+    return new Promise<void>((resolve, reject) => {
+        sql.connect(function(error) {
+            if(error) reject(error);
+            console.log('Connected to the MySQL');
+            resolve();
+        });
+    });
+}
 
 export default sql;
