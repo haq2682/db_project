@@ -1,44 +1,48 @@
 import sql from "../db_config/config";
 
-export default async function SaleMigration():Promise<void> {
+export default async function OrderMigration() {
     try {
         await new Promise((resolve) => {
-            sql.query(`SELECT * FROM information_schema.tables WHERE table_schema = 'pharmacy' AND table_name = 'users'`, function(error, results) {
+            sql.query(`SELECT * FROM information_schema.tables WHERE table_schema='pharmacy' AND table_name='sales'`, function(error, results) {
                 if(error) {
                     console.error("Error checking for table existance: ", error.sqlMessage);
                     return;
                 }
                 if(results.length === 0) {
-                    console.log("Users table does not exist. You must first add the users table before adding the sales table.");
+                    console.error("Sales table not found. You must first add sales table before inserting orders table.");
                     return;
                 }
-                return resolve(results);
-            });
+                resolve(results);
+            })
         });
+
         await new Promise((resolve) => {
             sql.query(`
-                CREATE TABLE IF NOT EXISTS sales (
+                CREATE TABLE IF NOT EXISTS orders (
                     id INT PRIMARY KEY NOT NULL,
+                    sales_id INT NOT NULL,
                     user_id INT NOT NULL,
-                    total_amount FLOAT NOT NULL,
-                    is_refunded TINYINT(1),
+                    delivery_status VARCHAR(30) NOT NULL,
+                    is_cancelled TINYINT(1) NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    FOREIGN KEY (sales_id) REFERENCES sales(id) ON DELETE CASCADE,
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 );
             `, function(error, results) {
                 if(error) {
-                    console.error("Error creating sales table: ", error.sqlMessage);
+                    console.error("Error inserting table: ", error.sqlMessage);
                     return;
                 }
-                console.log("Sales table created successfully.");
-                return resolve(results);
-            });
+                console.error("Orders table inserted successfully");
+                resolve(results);
+            })
         });
     }
+
     catch(error) {
-        console.log(error);
+        console.error(error);
     }
 }
 
-SaleMigration();
+OrderMigration();

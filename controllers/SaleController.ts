@@ -1,14 +1,16 @@
 import Sale from "../models/Sale";
+import Faker from "../faker/faker";
 
 const SaleController = {
-    all: ():Promise<Sale[]> => {
+    all: ():Promise<unknown> => {
         return Sale.all();
     },
-    find: (id:number):Promise<Sale[]> => {
+    find: (id:number):Promise<unknown> => {
         return Sale.find(id);
     },
     insert: (user_id:number, total_amount:number):void => {
-        let newSale = new Sale(user_id, total_amount);
+        let id = Faker.randomInteger(1, 999999999);
+        let newSale = new Sale(id, user_id, total_amount);
         newSale.save();
     },
     update: (id:number, attribute:string, value:unknown):void => {
