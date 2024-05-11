@@ -11,7 +11,7 @@ export default function RoleMigration() {
     `;
     sql.query(createTableQuery, function(error) {
         if (error) {
-            console.error("Error creating roles table:", error);
+            console.error("Error creating roles table:", error.sqlMessage);
             return;
         }
 
@@ -20,7 +20,7 @@ export default function RoleMigration() {
         roles.forEach(role => {
             sql.query(insertQuery, [role], function(error) {
                 if (error) {
-                    console.error(`Error inserting role '${role}':`, error);
+                    console.error(`Error inserting role '${role}':`, error.sqlMessage);
                     return;
                 }
             });
