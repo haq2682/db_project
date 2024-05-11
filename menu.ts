@@ -1,20 +1,37 @@
 import prompt from "prompt-sync";
+import sql from "./db_config/config";
+import user from "./models/User";
 // Define interfaces
 // Define interfaces
+var promptSync = prompt();
+let logedin: boolean;
 interface User {
   firstname: string;
   lastname: string;
   email: string;
   username: string;
   password: string;
-}
-
-interface Customer {
-  name: string;
+  contact: number;
+  role_id: number;
   address: string;
-  contactinfo: number;
 }
 
+// Define a function to handle user login
+/*const handleLogin = (userInfo: User) => {
+  const queryString = `SELECT * FROM users WHERE username = '${userInfo.username}' AND password = '${userInfo.password}'`;
+  sql.query(queryString, (error, results) => {
+    if (error) {
+      console.log(error);
+    } else {
+      if (results.length > 0) {
+        logedin = true;
+        console.log("login successful");
+      } else {
+        console.log("login failed");
+      }
+    }
+  });
+};*/
 // Simulated database of users
 const users: User[] = [
   {
@@ -23,31 +40,40 @@ const users: User[] = [
     email: "fahad133@g,ail.com",
     username: "owner1",
     password: "password1",
+    contact: 123456789,
+    role_id: 1,
+    address: "dhaka",
   },
   {
     firstname: "abdul",
     lastname: "haq",
-    email: "fahad133@g,ail.com",
-    username: "owner2",
+    email: "haqulfunity69@gmail.com",
+    username: "customer2",
     password: "password2",
+    contact: 123456789,
+    role_id: 2,
+    address: "dhaka",
   },
 ];
 
 // Function to handle user login
 async function role() {
-  const promptSync = prompt();
   console.log(`----ONLINE PHARMACY----
   (1) owner
   (2) Customer
   (3) Exit`);
   var r = promptSync("Select your role: ");
   switch (r) {
-    case "1":
-      login();
+    case "1": {
+      console.clear();
+      Owner();
       break;
-    case "2":
+    }
+    case "2": {
+      console.clear();
       customerMenu();
       break;
+    }
     case "3":
       process.exit();
     default: {
@@ -57,8 +83,68 @@ async function role() {
     }
   }
 }
+function Owner() {
+  console.log("----Welcome To Online Pharmacy----");
+  console.log(`1. Login.
+2. Register.
+3. Exit.`);
+
+  const action = promptSync("Select an action : ");
+  switch (action) {
+    case "1": {
+      console.clear();
+      login();
+      break;
+    }
+    case "2": {
+      console.clear();
+      register();
+      break;
+    }
+    case "3": {
+      console.clear();
+      console.log("exiting");
+      role();
+    }
+    default: {
+      console.clear();
+      console.log("Invalid option selected.");
+      Owner();
+      break;
+    }
+  }
+}
+function register() {
+  console.log("-----REGISTERATION----");
+
+  const firstname = promptSync("Enter your firstname: ");
+  const lastname = promptSync("Enter your lastname: ");
+  const email = promptSync("Enter your email: ");
+  const contact = promptSync("Enter your contact number :");
+  const address = promptSync("Enter your address: ");
+  console.log(`Enter your Role ID
+  1. Owner.
+  2. Customer.`);
+  const role_id = promptSync("select a role: ");
+  const username = promptSync("Enter your username: ");
+  const password = promptSync("Enter your password: ");
+  let newuser = {
+    firstname,
+    lastname,
+    email,
+    username,
+    password,
+    contact,
+    address,
+    role_id,
+  };
+  //implement insert here
+  console.clear();
+  console.log("register successfully");
+  Owner();
+}
 function login() {
-  const promptSync = prompt();
+  console.log("----login to ONLINE PHARMACY----");
   const username = promptSync("Enter your username: ");
   const password = promptSync("Enter your password: ", { echo: "*" });
 
@@ -66,17 +152,23 @@ function login() {
     (u) => u.username === username && u.password === password
   );
   if (!user) {
+    console.clear();
     console.log("Invalid username or password.");
-    return;
-  } else {
+    login();
+  } else if ((user.role_id = 1)) {
+    console.clear();
     console.log(`Welcome, ${user.username}!`);
     ownerMenu();
+  } else if ((user.role_id = 2)) {
+    console.clear();
+    console.log(`Welcome, ${user.username}!`);
+    customerMenu();
   }
 }
 
 // Owner menu
 function ownerMenu() {
-  const promptSync = prompt();
+  console.log("----Welcome To Online Pharmacy----");
   while (true) {
     console.log(`(1) Acounts.
 (2) Search Products.
@@ -94,54 +186,63 @@ function ownerMenu() {
 
     switch (action) {
       case "1": {
+        console.clear();
         console.log("Acounts");
         accounts();
         break;
         // Implement Acounts logic
       }
       case "2": {
+        console.clear();
         console.log("Search Products");
         searchProducts();
         break;
         // Implement Search Products logic
       }
       case "3": {
+        console.clear();
         console.log("Manage Orders");
         manageorders();
         break;
       }
       // Implement Manage Orders logic
       case "4": {
+        console.clear();
         console.log("Manage Sales");
         managesales();
         // Implement Manage Sales logic
         break;
       }
       case "5": {
+        console.clear();
         console.log("Check Inventory Levels");
         checkinventory();
         // Implement Check Inventory Levels logic
         break;
       }
       case "6": {
+        console.clear();
         console.log("Suppply order");
         supplyorder();
         // Implement Suppply order logic
         break;
       }
       case "7": {
+        console.clear();
         console.log("Check Financial Records");
         checkfinancialrecords();
         // Implement Check Financial Records logic
         break;
       }
       case "8": {
+        console.clear();
         console.log("generate reciept");
         generatereciept();
         // Implement generate reciept logic
         break;
       }
       case "9": {
+        console.clear();
         console.log("Manage Refunds");
         managerefunds();
         // Implement Manage Refunds logic
@@ -149,7 +250,8 @@ function ownerMenu() {
       }
 
       case "10": {
-        console.log("LogOut");
+        console.clear();
+        console.log("Logging out");
         role();
         // Implement LogOut logic
         break;
@@ -160,8 +262,9 @@ function ownerMenu() {
         // Implement Exit System logic
       }
       default: {
+        console.clear();
         console.log("Invalid option.");
-        // Implement default logic
+        ownerMenu();
         break;
       }
     }
@@ -170,59 +273,137 @@ function ownerMenu() {
 
 // Customer menu
 function customerMenu() {
-  const promptSync = prompt();
-  while (true) {
-    console.log(`----welcome to Online Pharmacy---
+  if (!logedin) {
+    while (true) {
+      console.log(`----welcome to Online Pharmacy---
     1. Browse Products.
     2. Search Products.
     3. Place Order.
     4. Apply Refund.
-    5. exit menu.`);
+    5. Login.
+    6. Register.
+    7. exit menu.`);
 
-    const action = promptSync("Select an action");
-    switch (action) {
-      case "1": {
-        console.log("products...");
-        showAllproducts();
-        break;
+      const action = promptSync("Select an action");
+      switch (action) {
+        case "1": {
+          console.log("products...");
+          showAllproducts();
+          break;
+        }
+        case "2": {
+          console.log("");
+          // Implement search products logic
+          searchproducts();
+          break;
+        }
+        case "3": {
+          if (!logedin) {
+            console.clear();
+            console.log("please login/ Register first");
+            Owner();
+            break;
+          } else {
+            console.clear();
+            console.log("ORDER");
+            order();
+            break;
+          }
+        }
+        case "4": {
+          console.clear();
+          console.log("REFUNDING");
+          refunds();
+          break;
+        }
+        case "5": {
+          console.clear();
+          console.log("Login");
+          login();
+          break;
+        }
+        case "6": {
+          console.clear();
+          console.log("Register");
+          register();
+          break;
+        }
+        case "7": {
+          console.clear();
+          console.log("Exiting menu...");
+          role();
+          break;
+        }
+        default:
+          console.log("Invalid option.");
+          customerMenu();
       }
-      case "2": {
-        console.log("");
-        // Implement search products logic
-        searchproducts();
-        break;
+    }
+  } else if (logedin) {
+    while (true) {
+      console.log(`----welcome to Online Pharmacy---
+      1. Browse Products.
+      2. Search Products.
+      3. Place Order.
+      4. Apply Refund.
+      5. Logout.
+      6. exit menu.`);
+
+      const action = promptSync("Select an action");
+      switch (action) {
+        case "1": {
+          console.log("products...");
+          showAllproducts();
+          break;
+        }
+        case "2": {
+          console.log("");
+          // Implement search products logic
+          searchproducts();
+          break;
+        }
+        case "3": {
+          console.clear();
+          console.log("ORDER");
+          order();
+          break;
+        }
+        case "4": {
+          console.clear();
+          console.log("REFUNDING");
+          refunds();
+          break;
+        }
+        case "5": {
+          console.clear();
+          console.log("Logging out");
+          logedin = false;
+          customerMenu();
+          break;
+        }
+        case "6": {
+          console.clear();
+          console.log("Exiting menu...");
+          role();
+          break;
+        }
+        default:
+          console.log("Invalid option.");
+          customerMenu();
       }
-      case "3": {
-        console.log("ORDER");
-        order();
-        break;
-      }
-      case "4": {
-        console.log("REFUNDING");
-        refunds();
-        break;
-      }
-      case "5": {
-        console.log("Exiting menu...");
-        role();
-        break;
-      }
-      default:
-        console.log("Invalid option.");
-        customerMenu();
     }
   }
 }
 function accounts() {
   console.log("Accounts functionality");
-  const promptSync = prompt();
+
   while (true) {
     console.log(`(1) Add an Account.
-    (2) Remove an Account.
-    (3) Edit an Account.
-    (4) View Accounts.
-    (5) Find Accounts.
-    (6) exit.`);
+(2) Remove an Account.
+(3) Edit an Account.
+(4) View Accounts.
+(5) Find Accounts.
+(6) exit.`);
 
     var choice = promptSync("Enter your choice: ");
     switch (choice) {
@@ -252,6 +433,7 @@ function accounts() {
       }
 
       case "6": {
+        console.clear();
         console.log("Exiting ...");
         ownerMenu();
         break;
@@ -261,14 +443,14 @@ function accounts() {
 }
 function manageorders() {
   console.log("Manage Orders functionality");
-  const promptSync = prompt();
+
   while (true) {
     console.log(`(1) Add an Order Record.
-    (2) Remove an Order Record.
-    (3) Edit an Order Record.
-    (4) View Order Records.
-    (5) Find an Order Record.
-    (6) exit.`);
+(2) Remove an Order Record.
+(3) Edit an Order Record.
+(4) View Order Records.
+(5) Find an Order Record.
+(6) exit.`);
 
     var choice = promptSync("Enter your choice: ");
     switch (choice) {
@@ -298,6 +480,7 @@ function manageorders() {
       }
 
       case "6": {
+        console.clear();
         console.log("Exiting ...");
         ownerMenu();
         break;
@@ -306,7 +489,6 @@ function manageorders() {
   }
 }
 function managesales() {
-  const promptSync = prompt();
   console.log("Manage Sales functionality");
   while (true) {
     console.log(`(1) Add a Sale Record.
@@ -343,6 +525,7 @@ function managesales() {
         // Implement sales management logic here
       }
       case "6": {
+        console.clear();
         console.log("Exiting ...");
         ownerMenu();
         break;
@@ -358,7 +541,7 @@ function checkinventory() {
 }
 function supplyorder() {
   console.log("Supply Order functionality");
-  const promptSync = prompt();
+
   while (true) {
     console.log(`(1) Add a Supply Order.
     (2) Remove a Supply Order.
@@ -390,6 +573,7 @@ function supplyorder() {
         // Implement supply order logic here
       }
       case "6": {
+        console.clear();
         console.log("Exiting ...");
         ownerMenu();
         break;
@@ -398,7 +582,6 @@ function supplyorder() {
   }
 }
 function checkfinancialrecords() {
-  const promptSync = prompt();
   console.log("Check Financial Records functionality");
   while (true) {
     console.log(`(1) Check Monthly Profit.
@@ -442,7 +625,8 @@ function checkfinancialrecords() {
         break;
       }
       case "7": {
-        console.log("exiting");
+        console.clear();
+        console.log("Exiting..");
         customerMenu();
         break;
       }
@@ -459,8 +643,6 @@ function generatereciept() {
 
 // customer functions
 function order() {
-  const promptSync = prompt();
-
   let productlist = [];
   let quantitylist = [];
   while (true) {
@@ -515,6 +697,7 @@ function order() {
       }
 
       case "6": {
+        console.clear();
         console.log("exiting");
         customerMenu();
         break;
@@ -524,7 +707,6 @@ function order() {
 }
 
 function searchProducts() {
-  const promptSync = prompt();
   while (true) {
     console.log(`Search products...
 (1) search By ID.
@@ -544,8 +726,9 @@ function searchProducts() {
         searchbycategory();
         break;
       case "4": {
+        console.clear();
         console.log("exiting");
-        customerMenu();
+        ownerMenu();
         break;
       }
       default:
@@ -556,7 +739,6 @@ function searchProducts() {
   }
 }
 function searchproducts() {
-  const promptSync = prompt();
   while (true) {
     console.log(`Search products...
   (1) search by product name
@@ -572,6 +754,7 @@ function searchproducts() {
         searchbycategory();
         break;
       case "3": {
+        console.clear();
         console.log("exiting");
         customerMenu();
         break;
@@ -586,32 +769,33 @@ function searchproducts() {
 
 function searchByID() {
   console.log("search by product ID");
-  const promptSync = prompt();
+
   const productID = promptSync("Enter the product ID: ");
   // Implement search products logic
 }
 
 function searchbyname() {
   console.log("search by product name");
-  const promptSync = prompt();
+
   const productName = promptSync("Please enter a product name: ");
   // Implement search products logic
 }
 
 function searchbycategory() {
   console.log("search by category");
-  const promptSync = prompt();
+
   const catagoryChoice = promptSync("Enter the catagory");
 }
 
 function refunds() {
-  const promptSync = prompt();
   const name = promptSync("Enter your name: ");
   const address = promptSync("Enter your address: ");
   const contactinfo = promptSync("Enter your contact info: ");
 }
 function managerefunds() {
-  const promptSync = prompt();
+  const name = promptSync("Enter your name: ");
+  const address = promptSync("Enter your address: ");
+  const contactinfo = promptSync("Enter your contact info: ");
 }
 function showAllproducts() {
   console.log("Showing all products...");
