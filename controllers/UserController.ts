@@ -1,4 +1,5 @@
 import User from "../models/User";
+import sql, {connectToDatabase} from "../db_config/config";
 
 const UserController = {
     all: ():Promise<User[]> => {
@@ -16,6 +17,22 @@ const UserController = {
     },
     delete: (id:number):unknown => {
         return User.delete(id);
+    },
+    checkUsername: async (username:string):Promise<boolean> => {
+        return new Promise((resolve) => {
+            sql.query(`SELECT username FROM users WHERE username=?`, [username], function(error, results) {
+                if(error) resolve(true);
+                else resolve(false);
+            })
+        });
+    },
+    findByUsername: async (username:string):Promise<User> => {
+        return new Promise((resolve, reject) => {
+            sql.query(`SELECT * FROM users WHERE username=?`, [username], function(error, results) {
+                if(error) reject(error);
+                else resolve(results[0]);
+            });
+        });
     }
 }
 
