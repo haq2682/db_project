@@ -41,8 +41,8 @@ export default async function ProductSupplyMigration(): Promise<void> {
                     product_quantity INT NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                    FOREIGN KEY (supplyOrderID) REFERENCES supply_orders(supplyOrderID) ON DELETE CASCADE,
-                    FOREIGN KEY (productID) REFERENCES products(productID) ON DELETE CASCADE
+                    FOREIGN KEY (supplyOrderID) REFERENCES supply_orders(id) ON DELETE CASCADE,
+                    FOREIGN KEY (productID) REFERENCES products(id) ON DELETE CASCADE
                 );
             `, function (error, results) {
                 if (error) {
