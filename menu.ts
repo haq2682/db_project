@@ -3,6 +3,8 @@ import sql from "./db_config/config";
 import User from "./models/User";
 import bcrypt from "bcrypt";
 import UserController from "./controllers/UserController";
+import ProductController from "./controllers/ProductController";
+import PromptSync from "prompt-sync";
 // Define interfaces
 // Define interfaces
 var promptSync = prompt();
@@ -143,8 +145,6 @@ async function register() {
     if(user.address.length >= 1) break;
   }
 
-  console.log(user);
-
   console.log(`Enter your Role ID
   1. Owner.
   2. Customer.`);
@@ -153,10 +153,11 @@ async function register() {
     if(user.role_id === 1 || user.role_id === 2) break;
     else console.error("Role input is invalid, please try again");
   }
-
-  console.clear();
   let newUser = new User(user.first_name, user.last_name, user.username, user.email, user.password, user.contact, user.address, user.role_id);
   await newUser.save();
+  console.log("User created successfully!");
+  promptSync("Press enter to continue...");
+  console.clear();
   Owner();
 }
 async function login() {
@@ -200,28 +201,29 @@ async function login() {
 }
 
 // Owner menu
-function ownerMenu() {
+async function ownerMenu() {
   console.clear();
   console.log("----Welcome To Online Pharmacy----");
   while (true) {
     console.log(`(1) Accounts.
 (2) Search Products.
-(3) Manage Orders.
-(4) Manage Sales.
-(5) Check Inventory Levels.
-(6) Suppply order.
-(7) Check Financial Records.
-(8) generate reciept.
-(9) Manage Refunds.
-(10) LogOut.
-(11) Exit System.`);
+(3) Add product
+(4) Manage Orders.
+(5) Manage Sales.
+(6) Check Inventory Levels.
+(7) Supply order.
+(8) Check Financial Records.
+(9) generate receipt.
+(10) Manage Refunds.
+(11) LogOut.
+(12) Exit System.`);
 
     var action = promptSync("Select an action : ");
 
     switch (action) {
       case "1": {
         console.clear();
-        console.log("Acounts");
+        console.log("Accounts");
         accounts();
         break;
         // Implement Acounts logic
@@ -235,47 +237,105 @@ function ownerMenu() {
       }
       case "3": {
         console.clear();
+        console.log("Add product");
+        let product: {
+          name:string,
+          unit_price:number,
+          quantity:number,
+          category_id:number,
+          user_id:number | undefined,
+        } = {
+          name:"",
+          unit_price: 0,
+          quantity: 0,
+          category_id: 0,
+          user_id: auth?.id
+        }
+
+        let category:string;
+
+        while(true) {
+          product.name = promptSync("Enter name of the product: ");
+          if(product.name.length >= 1) break;
+        }
+        while(true) {
+          product.unit_price = parseInt(promptSync("Enter the unit price of the product: "));
+          if(product.unit_price >= 1) break;
+        }
+        while(true) {
+          product.quantity = parseInt(promptSync("Enter the quantity fo the stock: "));
+          if(product.quantity >= 1) break;
+        }
+        let categories:any[] = await new Promise((resolve, reject) => {
+          sql.query("SELECT category FROM categories", function(error, results) {
+            if(error) reject(error);
+            resolve(results);
+          })
+        })
+        console.log(categories);
+        let flag:boolean = false;
+        while(true) {
+          category = promptSync("Enter the category: ");
+          for(let i = 0; i < categories.length; i++) {
+            if(category === categories[i].category) {
+              flag = true;
+              product.category_id = i+1;
+              break;
+            }
+          }
+          if(!flag) {
+            console.log("Category does not exist, please refer to the categories inside the database and try again...");
+          }
+          else break;
+        }
+        ProductController.insert(product.name, product.unit_price, product.quantity, 'in stock', product.category_id, 5);
+        console.log("Product created successfully");
+        promptSync("Press enter key to continue...");
+        break;
+      }
+      case "4": {
+        console.clear();
         console.log("Manage Orders");
         manageorders();
         break;
       }
       // Implement Manage Orders logic
-      case "4": {
+      case "5": {
         console.clear();
         console.log("Manage Sales");
         managesales();
         // Implement Manage Sales logic
         break;
       }
-      case "5": {
+      case "6": {
         console.clear();
         console.log("Check Inventory Levels");
         checkinventory();
         // Implement Check Inventory Levels logic
         break;
       }
-      case "6": {
+      case "7": {
         console.clear();
         console.log("Suppply order");
         supplyorder();
         // Implement Suppply order logic
         break;
       }
-      case "7": {
+      case "8": {
         console.clear();
         console.log("Check Financial Records");
         checkfinancialrecords();
         // Implement Check Financial Records logic
         break;
       }
-      case "8": {
+      case "9": {
         console.clear();
         console.log("generate reciept");
         generatereciept();
         // Implement generate reciept logic
         break;
       }
-      case "9": {
+      case "10": {
         console.clear();
         console.log("Manage Refunds");
         managerefunds();
@@ -283,14 +343,16 @@ function ownerMenu() {
         break;
       }
 
-      case "10": {
+      case "11": {
         console.clear();
+        auth = undefined;
         console.log("Logging out");
         role();
         // Implement LogOut logic
         break;
       }
-      case "11": {
+      case "12": {
+        auth = undefined;
         console.log("Exiting System...");
         process.exit();
         // Implement Exit System logic
@@ -306,10 +368,11 @@ function ownerMenu() {
 }
 
 // Customer menu
-function customerMenu() {
+async function customerMenu() {
   console.clear();
   if (!auth) {
     while (true) {
+      console.clear();
       console.log(`----welcome to Online Pharmacy---
     1. Browse Products.
     2. Search Products.
@@ -319,7 +382,7 @@ function customerMenu() {
     6. Register.
     7. exit menu.`);
 
-      const action = promptSync("Select an action");
+      const action = promptSync("Select an action: ");
       switch (action) {
         case "1": {
           console.log("products...");
@@ -327,9 +390,27 @@ function customerMenu() {
           break;
         }
         case "2": {
-          console.log("");
-          // Implement search products logic
-          searchproducts();
+          console.clear();
+          console.log("Search Products");
+          let name:string;
+          let item:unknown;
+          let string;
+          while(true) {
+            name = promptSync("Enter the name of the item: ");
+            string = `%${name}$`;
+            item = await new Promise((resolve, reject) => {
+              sql.query(`SELECT *, products.id FROM products INNER JOIN categories ON products.category_id=categories.id WHERE products.name LIKE ?`, [name], function(error, results) {
+                if(error) reject(error);
+                resolve(results);
+              })
+            })
+            if(!item) console.error("Item not found, please input again...");
+            else {
+              console.log(item);
+              promptSync("Press enter key to continue...");
+              break;
+            }
+          }
           break;
         }
         case "3": {
@@ -446,6 +527,7 @@ async function accounts() {
       case "1": {
         console.clear();
         register();
+        break;
       }
 
       case "2": {
@@ -476,6 +558,7 @@ async function accounts() {
         catch(error) {
           console.error(error);
         }
+        break;
       }
 
       case "3": {
@@ -503,8 +586,8 @@ async function accounts() {
         let flag:boolean = false;
         while(true) {
           attribute = promptSync("What do you want to update? (Remember to put \"_\" at the place of spaces): ");
-          for(let att in attributes) {
-            if(att === attribute) {
+          for(let i = 0; i < attributes.length; i++) {
+            if(attributes[i] === attribute) {
               flag = true;
               break;
             }
@@ -528,6 +611,7 @@ async function accounts() {
         catch(error) {
           console.error(error);
         }
+        break;
       }
 
       case "4": {
@@ -540,6 +624,7 @@ async function accounts() {
         catch(error) {
           console.error(error);
         }
+        break;
       }
 
       case "5": {
@@ -555,8 +640,9 @@ async function accounts() {
           console.log(user);
         }
         catch(error) {
-          console.log(error);
+          console.error(error);
         }
+        break;
       }
 
       case "6": {
@@ -662,10 +748,16 @@ function managesales() {
   }
 }
 
-function checkinventory() {
+async function checkinventory() {
+  console.clear();
   console.log("Check Inventory Levels functionality");
-
-  // Implement inventory checking logic here
+  try {
+    const results = await ProductController.allByAuth(auth?.id);
+    console.log(results);
+  }
+  catch(error) {
+    console.log(error);
+  }
 }
 function supplyorder() {
   console.log("Supply Order functionality");
@@ -895,24 +987,54 @@ function searchproducts() {
   }
 }
 
-function searchByID() {
+async function searchByID() {
+  console.clear();
   console.log("search by product ID");
-
-  const productID = promptSync("Enter the product ID: ");
-  // Implement search products logic
+  let productID:number;
+  while(true) {
+    productID = parseInt(promptSync("Enter the product ID: "));
+    if(productID >= 1) break;
+  }
+  try {
+    const results = await ProductController.find(productID);
+    console.log(results);
+  }
+  catch(error) {
+    console.error(error);
+  }
 }
 
-function searchbyname() {
+async function searchbyname() {
+  console.clear();
   console.log("search by product name");
-
-  const productName = promptSync("Please enter a product name: ");
-  // Implement search products logic
+  let name:string;
+  while(true) {
+    name = promptSync("Please enter a product name: ");
+    if(name.length >= 1) break;
+  }
+  try {
+    const results = await ProductController.findByName(name, auth?.id);
+    console.log(results);
+  }
+  catch(error) {
+    console.error(error);
+  }
 }
 
-function searchbycategory() {
+async function searchbycategory() {
   console.log("search by category");
-
-  const catagoryChoice = promptSync("Enter the catagory");
+  let category:string;
+  while(true) {
+    category = promptSync("Please enter category name: ");
+    if(category.length >= 1) break;
+  }
+  try {
+    const results = await ProductController.findByCategory(category, auth?.id);
+    console.log(results);
+  }
+  catch(error) {
+    console.error(error);
+  }
 }
 
 function refunds() {
@@ -931,5 +1053,5 @@ function showAllproducts() {
 }
 
 // Start the login process
-accounts();
+customerMenu();
 export default role;  

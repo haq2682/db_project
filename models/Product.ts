@@ -60,7 +60,7 @@ class Product {
 
     public static async find(id:number):Promise<Product[]> {
         return new Promise((resolve) => {
-            sql.query(`select *, products.id from products where id=? inner join users on products.user_id=users.id inner join categories on products.category_id=categories.id`, [id], (error, results) => {
+            sql.query(`select *, products.id from products inner join users on products.user_id=users.id inner join categories on products.category_id=categories.id where products.id=?`, [id], (error, results) => {
                 if(error) {
                     console.error("Error fetching products: ", error.sqlMessage);
                     return;

@@ -60,14 +60,14 @@ class User {
         })
     }
 
-    public static async find(id:number):Promise<User[]> {
+    public static async find(id:number):Promise<User> {
         return new Promise((resolve) => {
             sql.query(`select *, users.id from users inner join roles on users.role_id=roles.id where users.id=?`, [id], (error, results) => {
                 if(error) {
                     console.error("Error fetching users: ", error.sqlMessage);
                     return;
                 }
-                else resolve(results as User[]);
+                else resolve(results[0] as User);
             })
         })
     }

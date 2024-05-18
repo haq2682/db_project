@@ -9,7 +9,7 @@ const OrderSeeder = async (length:number) => {
     let user_count:any;
 
     await new Promise((resolve) => {
-        sql.query(`SELECT COUNT(*) AS count FROM users;`, function(error, results) {
+        sql.query(`SELECT MAX(*) AS count FROM users;`, function(error, results) {
             if(error) {
                 console.error("An error ocurred while getting count of users: ", error.sqlMessage);
                 return;

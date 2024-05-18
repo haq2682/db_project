@@ -1,11 +1,11 @@
 import User from "../models/User";
-import sql, {connectToDatabase} from "../db_config/config";
+import sql from "../db_config/config";
 
 const UserController = {
     all: ():Promise<User[]> => {
         return User.all();
     },
-    find: (id:number):Promise<User[]> => {
+    find: (id:number):Promise<User> => {
         return User.find(id);
     },
     insert: (first_name:string, last_name:string, username:string, email:string, password:string, contact:string, address:string, role_id:number):void => {
@@ -44,7 +44,10 @@ const UserController = {
     },
     updateByUsername: async (attribute:string, value:string, username:string):Promise<void> => {
         return new Promise((resolve, reject) => {
-            sql.query(`UPDATE users SET`)
+            sql.query(`UPDATE users SET ${attribute}=? WHERE username=?`, [value, username], function(error, results) {
+                if(error) reject(error);
+                resolve(results);
+            })
         });
     },
     allCustomers: async ():Promise<User[]> => {
