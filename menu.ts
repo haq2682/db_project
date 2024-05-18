@@ -85,7 +85,7 @@ function Owner() {
     }
   }
 }
-function register() {
+async function register() {
   console.log("-----REGISTERATION----");
 
   let user: {
@@ -143,6 +143,8 @@ function register() {
     if(user.address.length >= 1) break;
   }
 
+  console.log(user);
+
   console.log(`Enter your Role ID
   1. Owner.
   2. Customer.`);
@@ -153,45 +155,56 @@ function register() {
   }
 
   console.clear();
-  UserController.insert(user.first_name, user.last_name, user.username, user.email, user.password, user.contact, user.address, user.role_id);
-  console.log("User Created Successfully!");
+  let newUser = new User(user.first_name, user.last_name, user.username, user.email, user.password, user.contact, user.address, user.role_id);
+  await newUser.save();
   Owner();
 }
 async function login() {
-  // console.clear();
-  // console.log("----login to ONLINE PHARMACY----");
+  console.clear();
+  console.log("----login to ONLINE PHARMACY----");
   
-  // let user: User | undefined;
-  // let username: string;
-  // let password: string;
+  let user: User | undefined;
+  let username: string;
+  let password: string;
 
-  // username = promptSync("Enter your username: ");
+  username = promptSync("Enter your username: ");
 
-  UserController.findByUsername("example123").then(res => console.log(res)).catch(e => console.log(e));
+  try {
+    user = await UserController.findByUsername(username);    
+  }
+
+  catch(error) {
+    console.error(error);
+  }
+
+  if(!user) {
+    promptSync("No account found with that username. Press enter key to try again...");
+    login();
+  }
   
-  // while(user && true) { // Ensure user is defined before checking password
-  //   password = promptSync("Enter your password: ", { echo: "*" });
-  //   if(password.length >= 1) {
-  //     if(user.password === password) {
-  //       auth = user;
-  //       break;
-  //     } else {
-  //       console.error("Incorrect password, please try again.");
-  //       continue; // Continue the loop if password is incorrect
-  //     }
-  //   }
-  // }
+  while(user && true) { // Ensure user is defined before checking password
+    password = promptSync("Enter your password: ", { echo: "*" });
+    if(password.length >= 1) {
+      if(user.password === password) {
+        auth = user;
+        break;
+      } else {
+        console.error("Incorrect password, please try again.");
+        continue; // Continue the loop if password is incorrect
+      }
+    }
+  }
 
-  // if(user && user.role_id === 1) ownerMenu();
-  // else if(user && user.role_id === 2) customerMenu();
-  // else login(); // Recursive call if login fails
+  if(user && user.role_id === 1) ownerMenu();
+  else if(user && user.role_id === 2) customerMenu();
 }
 
 // Owner menu
 function ownerMenu() {
+  console.clear();
   console.log("----Welcome To Online Pharmacy----");
   while (true) {
-    console.log(`(1) Acounts.
+    console.log(`(1) Accounts.
 (2) Search Products.
 (3) Manage Orders.
 (4) Manage Sales.
@@ -294,6 +307,7 @@ function ownerMenu() {
 
 // Customer menu
 function customerMenu() {
+  console.clear();
   if (!auth) {
     while (true) {
       console.log(`----welcome to Online Pharmacy---
@@ -415,7 +429,8 @@ function customerMenu() {
     }
   }
 }
-function accounts() {
+async function accounts() {
+  console.clear();
   console.log("Accounts functionality");
 
   while (true) {
@@ -429,28 +444,119 @@ function accounts() {
     var choice = promptSync("Enter your choice: ");
     switch (choice) {
       case "1": {
-        console.log("Add an Account");
-        // Implement account management logic here
+        console.clear();
+        register();
       }
 
       case "2": {
+        console.clear();
         console.log("Remove an Account");
-        // Implement account management logic here
+        let username:string;
+        while(true) {
+          username = promptSync("Enter username: ");
+          if(username.length >= 1) {
+            try {
+              const user = await UserController.checkUsername(username);
+              if(!user) break;
+              else {
+                console.clear();
+                console.log("User of the inputted username not found, please input again...");
+              }
+            }
+            catch(error) {
+              console.log(error);
+            }
+          }
+        }
+        try {
+          await UserController.deleteByUsername(username);
+          console.log("User deleted successfully");
+          promptSync("Press enter to continue...");
+        }
+        catch(error) {
+          console.error(error);
+        }
       }
 
       case "3": {
+        console.clear();
         console.log("Edit an Account");
-        // Implement account management logic here
+        let username:string;
+        while(true) {
+          username = promptSync("Enter username: ");
+          if(username.length >= 1) {
+            try {
+              const user = await UserController.checkUsername(username);
+              if(!user) break;
+              else {
+                console.clear();
+                console.log("User of the inputted username not found, please input again...");
+              }
+            }
+            catch(error) {
+              console.log(error);
+            }
+          }
+        }
+        let attribute:string;
+        let attributes:string[] = ["first_name", "last_name", "username", "email", "contact", "address", "role_id"];
+        let flag:boolean = false;
+        while(true) {
+          attribute = promptSync("What do you want to update? (Remember to put \"_\" at the place of spaces): ");
+          for(let att in attributes) {
+            if(att === attribute) {
+              flag = true;
+              break;
+            }
+          }
+          if(!flag) {
+            promptSync("Attribute not found, press enter to input attribute again...");
+            console.clear();
+          }
+          else if(flag) break;
+        }
+        let value:string;
+        while(true) {
+          value = promptSync("Enter value of the field you want to update: ");
+          if(value.length >= 1) break;
+        }
+        try {
+          await UserController.updateByUsername(attribute, value, username);
+          console.log(`Successfully updated ${attribute}!`);
+          promptSync("Press enter to continue...");
+        }
+        catch(error) {
+          console.error(error);
+        }
       }
 
       case "4": {
+        console.clear();
         console.log("View  Accounts");
-        // Implement account management logic here
+        try {
+          const users = UserController.allCustomers();
+          console.log(users);
+        }
+        catch(error) {
+          console.error(error);
+        }
       }
 
       case "5": {
+        console.clear();
         console.log("Find  Accounts");
-        // Implement account management logic here
+        let username:string;
+        while(true) {
+          username = promptSync("Enter username: ");
+          if(username.length >= 1) break;
+        }
+        try {
+          const user = UserController.findByUsername(username);
+          console.log(user);
+        }
+        catch(error) {
+          console.log(error);
+        }
       }
 
       case "6": {
@@ -463,6 +569,7 @@ function accounts() {
   }
 }
 function manageorders() {
+  console.clear();
   console.log("Manage Orders functionality");
 
   while (true) {
@@ -824,5 +931,5 @@ function showAllproducts() {
 }
 
 // Start the login process
-login();
-export default login;
+accounts();
+export default role;  

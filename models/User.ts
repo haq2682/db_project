@@ -32,13 +32,14 @@ class User {
 
     public async save():Promise<void> {
         try {
-            await new Promise(() => {
-                sql.query('insert into users (first_name, last_name, username, email, password, contact, address, role_id) values (?,?,?,?,?,?,?,?)', [this.first_name, this.last_name, this.username, this.email, this.password, this.contact, this.address, this.role_id], function(error) {
+            await new Promise((resolve) => {
+                sql.query('insert into users (first_name, last_name, username, email, password, contact, address, role_id) values (?,?,?,?,?,?,?,?)', [this.first_name, this.last_name, this.username, this.email, this.password, this.contact, this.address, this.role_id], function(error, results) {
                     if(error) {
                         console.error("Error saving user: ", error.sqlMessage);
                         return;
                     }
                     console.log("User saved successfully");
+                    resolve(results);
                 });
             })
         }
@@ -61,7 +62,7 @@ class User {
 
     public static async find(id:number):Promise<User[]> {
         return new Promise((resolve) => {
-            sql.query(`select *, users.id from users where id=? inner join roles on users.role_id=roles.id`, [id], (error, results) => {
+            sql.query(`select *, users.id from users inner join roles on users.role_id=roles.id where users.id=?`, [id], (error, results) => {
                 if(error) {
                     console.error("Error fetching users: ", error.sqlMessage);
                     return;

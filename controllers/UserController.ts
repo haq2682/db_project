@@ -21,16 +21,37 @@ const UserController = {
     checkUsername: async (username:string):Promise<boolean> => {
         return new Promise((resolve) => {
             sql.query(`SELECT username FROM users WHERE username=?`, [username], function(error, results) {
-                if(error) resolve(true);
-                else resolve(false);
+                if(results.length > 0) resolve(false);
+                else resolve(true);
             })
         });
     },
     findByUsername: async (username:string):Promise<User> => {
         return new Promise((resolve, reject) => {
-            sql.query(`SELECT * FROM users WHERE username=?`, [username], function(error, results) {
+            sql.query(`SELECT * FROM users INNER JOIN roles on users.role_id=roles.id WHERE INNER JOIN orders ON orders.user_id=users.id INNER JOIN sales ON sales.user_id=users.id username=?`, [username], function(error, results) {
                 if(error) reject(error);
-                else resolve(results[0]);
+                else resolve(results[0] as User);
+            });
+        });
+    },
+    deleteByUsername: async (username:string):Promise<void> => {
+        return new Promise((resolve, reject) => {
+            sql.query(`DELETE FROM users WHERE username=?`, [username], function(error, results) {
+                if(error) reject(error);
+                resolve(results);
+            })
+        })
+    },
+    updateByUsername: async (attribute:string, value:string, username:string):Promise<void> => {
+        return new Promise((resolve, reject) => {
+            sql.query(`UPDATE users SET`)
+        });
+    },
+    allCustomers: async ():Promise<User[]> => {
+        return new Promise((resolve, reject) => {
+            sql.query(`SELECT * FROM users INNER JOIN orders ON orders.user_id=users.id INNER JOIN sales ON sales.user_id=users.id WHERE role_id = 2`, function(error, results) {
+                if(results.length <= 0) reject("No customers found");
+                resolve(results as User[]);
             });
         });
     }

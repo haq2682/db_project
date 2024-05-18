@@ -1,7 +1,6 @@
 {
   "dependencies": {
     "@types/mysql": "^2.15.26",
-    "bcrypt": "^5.1.1",
     "mysql": "^2.18.1",
     "prompt-sync": "^4.2.0"
   },
