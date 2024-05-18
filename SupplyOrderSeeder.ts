@@ -6,11 +6,9 @@ const SupplyOrderSeeder = async (length: number) => {
     await connectToDatabase();
     for (let i = 0; i < length; i++) {
         let supplyOrder = new SupplyOrder(
-            Faker.randomInteger(1, 100), // user_id
-            Faker.randomInteger(1, 100), // product_id
-            Faker.randomInteger(1, 50)   // product_quantity
+            Faker.randomInteger(1, 100) // user_id
         );
-        supplyOrder.save();
+        await supplyOrder.save();
     }
     console.log("Supply order seeding completed");
 }
