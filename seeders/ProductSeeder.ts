@@ -12,14 +12,13 @@ const ProductSeeder = async (length:number) => {
             resolve(results[0].count);
         });
     })
-    console.log(user_count);
 
     let randomNo:number;
     let user:User;
     for(let i = 0; i < length; i++) {
         while(true) {
             randomNo = Faker.randomInteger(1, user_count)
-            user = await UserController.find(randomNo);
+            user = await UserController.findOwner(randomNo);
             if(user) break;
         }
         let product = new Product(Faker.randomString(), Faker.randomInteger(10, 300), Faker.randomInteger(1, 50), 'in stock', Faker.randomInteger(1, 17), user.id);

@@ -30,6 +30,6 @@ const UserSeeder = async (length:number) => {
     console.log("User seeding completed");
 }
 
-UserSeeder(1);
+UserSeeder(100);
 
 export default UserSeeder;

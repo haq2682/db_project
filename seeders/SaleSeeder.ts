@@ -1,9 +1,10 @@
 import Faker from '../faker/faker';
 import Sale from '../models/Sale';
+import UserController from "../controllers/UserController";
 import sql, {connectToDatabase} from '../db_config/config';
 
 const SaleSeeder = async (length:number) => {
-    await connectToDatabase();
+    // await connectToDatabase();
 
     let sales:number[] = [];
 
@@ -11,7 +12,7 @@ const SaleSeeder = async (length:number) => {
     let products:any;
 
     await new Promise((resolve) => {
-        sql.query(`SELECT MAX(*) AS count FROM users;`, function(error, results) {
+        sql.query(`SELECT MAX(id) AS count FROM users;`, function(error, results) {
             if(error) {
                 console.error("An error occurred while getting count of users: ", error.sqlMessage);
                 return;
@@ -43,7 +44,12 @@ const SaleSeeder = async (length:number) => {
 
     for(let i = 0; i < length; i++) {
         id = Faker.randomInteger(1, 999999999);
-        user_id = Faker.randomInteger(1, user_count);
+
+        while(true) {
+            user_id = Faker.randomInteger(1, user_count);
+            let user = await UserController.find(user_id);
+            if(user) break;
+        }
         randomNo = Faker.randomInteger(1, 5);
 
         let sale:Sale = new Sale(id, user_id, total_amount);
