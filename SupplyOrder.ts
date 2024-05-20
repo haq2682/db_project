@@ -8,8 +8,8 @@ class SupplyOrder {
   public created_at: Date;
   public updated_at: Date;
 
-  public constructor(user_id?: number) {
-    this.id = 0;
+  public constructor(id:number, user_id?: number) {
+    this.id = id;
     this.user_id = user_id ?? 0;
     this.created_at = new Date();
     this.updated_at = new Date();
@@ -19,8 +19,8 @@ class SupplyOrder {
     try {
       await new Promise((resolve, reject) => {
         sql.query(
-          "INSERT INTO supply_orders (user_id) VALUES (?)",
-          [this.user_id],
+          "INSERT INTO supplyorders (id, user_id) VALUES (?, ?)",
+          [this.id, this.user_id],
           function (error, results) {
             if (error) {
               console.error("Error saving supply order: ", error.sqlMessage);
@@ -39,7 +39,7 @@ class SupplyOrder {
 
   public static async all(): Promise<SupplyOrder[]> {
     return new Promise((resolve, reject) => {
-      sql.query("SELECT * FROM supply_orders", (error, results) => {
+      sql.query("SELECT *,supplyorder.id FROM supplyorders inner join users on supplyorders.user_id = users.id inner join supplyorders_items on supplyorders.id = supplyorders_items.supplyOrder_id inner join items on supplyorders_items.item_id = items.id ", (error, results) => {
         if (error) {
           console.error("Error fetching supply orders: ", error.sqlMessage);
           reject(error);
@@ -53,7 +53,7 @@ class SupplyOrder {
   public static async find(id: number): Promise<SupplyOrder[]> {
     return new Promise((resolve, reject) => {
       sql.query(
-        "SELECT * FROM supply_orders WHERE id = ?",
+        "SELECT *,supplyorders.id FROM supplyorders WHERE id = ? inner join users on supplyorders.user_id=users.id inner join ",
         [id],
         (error, results) => {
           if (error) {
@@ -72,7 +72,7 @@ class SupplyOrder {
     attribute: string,
     value: unknown
   ): Promise<void> {
-    const query = `UPDATE supply_orders SET ${attribute} = ? WHERE id = ?`;
+    const query = `UPDATE supplyorders SET ${attribute} = ? WHERE id = ?`;
     try {
       await new Promise((resolve, reject) => {
         sql.query(query, [value, id], (error, results) => {
@@ -94,7 +94,7 @@ class SupplyOrder {
     try {
       await new Promise((resolve, reject) => {
         sql.query(
-          "DELETE FROM supply_orders WHERE id = ?",
+          "DELETE FROM supplyorders WHERE id = ?",
           [id],
           function (error, results) {
             if (error) {
