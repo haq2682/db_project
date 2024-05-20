@@ -21,7 +21,7 @@ export default async function SaleMigration():Promise<void> {
                     id INT PRIMARY KEY NOT NULL,
                     user_id INT NOT NULL,
                     total_amount FLOAT NOT NULL,
-                    is_refunded TINYINT(1),
+                    is_refunded TINYINT(1) NOT NULL DEFAULT 0,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

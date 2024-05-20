@@ -23,7 +23,7 @@ export default async function OrderMigration() {
                     sales_id INT NOT NULL,
                     user_id INT NOT NULL,
                     delivery_status VARCHAR(30) NOT NULL,
-                    is_cancelled TINYINT(1) NOT NULL,
+                    is_cancelled TINYINT(1) NOT NULL DEFAULT 0,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                     FOREIGN KEY (sales_id) REFERENCES sales(id) ON DELETE CASCADE,

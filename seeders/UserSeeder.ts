@@ -1,8 +1,7 @@
 import Faker from '../faker/faker';
-import User from '../models/User';
-import {connectToDatabase} from '../db_config/config';
+import sql, {connectToDatabase} from '../db_config/config';
 
-const UserSeeder = async (length:number) => {
+const UserSeeder = async (length:number, dateStart:string, dateEnd:string) => {
     await connectToDatabase();
     let firstName:string;
     let lastName:string;
@@ -13,6 +12,8 @@ const UserSeeder = async (length:number) => {
     let address:string;
     let role_id:number;
     let randomNo:number;
+    let created_at:any;
+    let updated_at:any;
     for(let i = 0; i < length; i++) {
         randomNo = Faker.randomInteger(1, 10000);
         firstName = Faker.firstName();
@@ -23,13 +24,19 @@ const UserSeeder = async (length:number) => {
         contact = Faker.contactNumber();
         address = Faker.address();
         role_id = Faker.randomInteger(1, 2);
+        created_at = Faker.date(dateStart, dateEnd);
+        updated_at = created_at;
 
-        let user = new User(firstName, lastName, username, email, password, contact, address, role_id);
-        user.save();
+        await new Promise((resolve, reject) => {
+            sql.query(`INSERT INTO users (first_name, last_name, username, email, password, contact, address, role_id, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)`, [firstName, lastName, username, email, password, contact, address, role_id, created_at, updated_at],function(error, results) {
+                if(error) reject(error);
+                resolve(results);
+            })
+        })
     }
     console.log("User seeding completed");
 }
 
-UserSeeder(100);
+UserSeeder(100, '2023-05-20T00:00:00', '2024-05-20T23:59:59');
 
 export default UserSeeder;

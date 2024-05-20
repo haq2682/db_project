@@ -65,6 +65,14 @@ const UserController = {
                 resolve(results[0] as User);
             })
         })
+    },
+    findCustomer: async (id:number):Promise<User> => {
+        return new Promise((resolve, reject) => {
+            sql.query(`SELECT *, users.id FROM users INNER JOIN roles ON users.role_id=roles.id WHERE roles.role='customer' AND users.id=?`, [id], function(error, results) {
+                if(error) reject(error);
+                resolve(results[0] as User);
+            })
+        })
     }
 }
 

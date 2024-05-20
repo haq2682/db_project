@@ -27,7 +27,9 @@ const Faker = {
         }
         return phoneNumber;
     },
-    date: (startDate:Date, endDate:Date): Date => {
+    date: (dateStart:string, dateEnd:string): Date => {
+        let startDate:Date = new Date(dateStart);
+        let endDate:Date = new Date(dateEnd);
         const startTime = startDate.getTime();
         const endTime = endDate.getTime();
         const randomTime = startTime + Math.random() * (endTime - startTime);
