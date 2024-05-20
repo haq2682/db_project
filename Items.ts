@@ -1,6 +1,6 @@
 import sql from '../db_config/config';
 
-class Items {
+class Item {
     public id: number;
     public item_name: string;
     public item_price: number;
@@ -39,28 +39,28 @@ class Items {
         }
     }
 
-    public static async all(): Promise<Items[]> {
+    public static async all(): Promise<Item[]> {
         return new Promise((resolve, reject) => {
-            sql.query('SELECT * FROM items', (error, results) => {
+            sql.query('SELECT *,items.id FROM items inner join products on items.product_id = products.id', (error, results) => {
                 if (error) {
                     console.error("Error fetching items: ", error.sqlMessage);
                     reject(error);
                     return;
                 }
-                resolve(results as Items[]);
+                resolve(results as Item[]);
             });
         });
     }
 
-    public static async find(id: number): Promise<Items[]> {
+    public static async find(id: number): Promise<Item[]> {
         return new Promise((resolve, reject) => {
-            sql.query('SELECT * FROM items WHERE id = ?', [id], (error, results) => {
+            sql.query('SELECT *,items.id FROM items WHERE id = ? inner join products on items.product_id = products.id', [id], (error, results) => {
                 if (error) {
                     console.error("Error fetching item: ", error.sqlMessage);
                     reject(error);
                     return;
                 }
-                resolve(results as Items[]);
+                resolve(results as Item[]);
             });
         });
     }
@@ -103,4 +103,4 @@ class Items {
     }
 }
 
-export default Items;
+export default Item;
