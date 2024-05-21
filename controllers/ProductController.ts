@@ -57,6 +57,22 @@ const ProductController = {
                 resolve(results);
             });
         })
+    },
+    allByCustomer: async ():Promise<Product[]> => {
+        return new Promise((resolve, reject) => {
+            sql.query(`SELECT name, unit_price, stock_status, categories.category FROM products INNER JOIN categories ON products.category_id=categories.id`, function(error, results) {
+                if(error) reject(error);
+                resolve(results);
+            })
+        })
+    },
+    customerSearch: async (name:string):Promise<Product[]> => {
+        return new Promise((resolve, reject) => {
+            sql.query(`SELECT *, products.id FROM products INNER JOIN categories ON products.category_id=categories.id WHERE products.name LIKE ?`, [name], function(error, results) {
+                if(error) reject(error);
+                resolve(results);
+            });
+        })
     }
 }
 

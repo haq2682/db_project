@@ -5,6 +5,7 @@ import bcrypt from "bcrypt";
 import UserController from "./controllers/UserController";
 import ProductController from "./controllers/ProductController";
 import PromptSync from "prompt-sync";
+import Product from "./models/Product";
 // Define interfaces
 // Define interfaces
 var promptSync = prompt();
@@ -394,16 +395,11 @@ async function customerMenu() {
           console.log("Search Products");
           let name:string;
           let item:unknown;
-          let string;
+          let string:string;
           while(true) {
             name = promptSync("Enter the name of the item: ");
             string = `%${name}$`;
-            item = await new Promise((resolve, reject) => {
-              sql.query(`SELECT *, products.id FROM products INNER JOIN categories ON products.category_id=categories.id WHERE products.name LIKE ?`, [name], function(error, results) {
-                if(error) reject(error);
-                resolve(results);
-              })
-            })
+            item = await ProductController.customerSearch(string);
             if(!item) console.error("Item not found, please input again...");
             else {
               console.log(item);
@@ -474,8 +470,22 @@ async function customerMenu() {
         }
         case "2": {
           console.log("");
-          // Implement search products logic
-          searchproducts();
+          console.clear();
+          console.log("Search Products");
+          let name:string;
+          let item:unknown;
+          let string:string;
+          while(true) {
+            name = promptSync("Enter the name of the item: ");
+            string = `%${name}$`;
+            item = await ProductController.customerSearch(string);
+            if(!item) console.error("Item not found, please input again...");
+            else {
+              console.log(item);
+              promptSync("Press enter key to continue...");
+              break;
+            }
+          }
           break;
         }
         case "3": {
@@ -526,7 +536,7 @@ async function accounts() {
     switch (choice) {
       case "1": {
         console.clear();
-        register();
+        await register();
         break;
       }
 
@@ -1047,11 +1057,13 @@ function managerefunds() {
   const address = promptSync("Enter your address: ");
   const contactinfo = promptSync("Enter your contact info: ");
 }
-function showAllproducts() {
+async function showAllproducts() {
+  console.clear();
   console.log("Showing all products...");
-  // Implement logic to display all products here
+  let products:Product[] = await ProductController.allByCustomer();
+  console.log(products);
 }
 
 // Start the login process
-customerMenu();
+showAllproducts();
 export default role;  
