@@ -38,7 +38,7 @@ class Sale {
         }
     }
 
-    public static async all():Promise<unknown> {
+    public static async all():Promise<Sale[]> {
         return new Promise((resolve) => {
             sql.query(`select *, sales.id from sales inner join users on sales.user_id=users.id inner join sales_products on sales.id=sales_products.sales_id inner join products on sales_products.product_id=products.id`, (error, results) => {
                 if(error) {
@@ -50,7 +50,7 @@ class Sale {
         })
     }
 
-    public static async find(id:number):Promise<unknown> {
+    public static async find(id:number):Promise<Sale[]> {
         return new Promise((resolve) => {
             sql.query(`select *, sales.id from sales where id=? inner join users on sales.user_id=users.id`, [id], (error, results) => {
                 if(error) {
@@ -83,6 +83,12 @@ class Sale {
 
     public static async delete(id:number):Promise<void> {
         try {
+            await new Promise((resolve, reject) => {
+                sql.query('delete from sales_products where sales_id=?', [id], function(error, results) {
+                    if (error) reject(error);
+                    resolve(results);
+                })
+            })
             await new Promise((resolve) => {
                 sql.query('delete from sales where id=?', [id], function(error, results) {
                     if(error) {

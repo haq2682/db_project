@@ -1,12 +1,13 @@
 import Sale from "../models/Sale";
 import Faker from "../faker/faker";
+import sql from '../db_config/config';
 
 const SaleController = {
-    all: ():Promise<unknown> => {
+    all: ():Promise<Sale[]> => {
         return Sale.all();
     },
-    find: (id:number):Promise<unknown> => {
-        return Sale.find(id);
+    find: async (id:number):Promise<Sale[]> => {
+        return await Sale.find(id);
     },
     insert: (user_id:number, total_amount:number):void => {
         let id = Faker.randomInteger(1, 999999999);
@@ -18,6 +19,18 @@ const SaleController = {
     },
     delete: (id:number):unknown => {
         return Sale.delete(id);
+    },
+    authInsert: async (id:number, user_id:number|undefined, total_amount:number):Promise<void> => {
+        let newSale = new Sale(id, user_id, total_amount);
+        await newSale.save();
+    },
+    generateReceipt: async (id:number):Promise<any> => {
+        return new Promise((resolve, reject) => {
+            sql.query(`select users.first_name as salesperson_firstname, users.last_name as salesperson_lastname, products.name as product_name, products.unit_price as product_unit_price, sales_products.quantity as product_quantity, sales_products.quantity_price as product_quantity_price, sales.total_amount as total from sales inner join users on sales.user_id=users.id inner join sales_products on sales.id=sales_products.sales_id inner join products on sales_products.product_id=products.id where sales.id=?`, [id], function(error, results) {
+                if(error) reject(error);
+                resolve(results);
+            })
+        });
     }
 }
 

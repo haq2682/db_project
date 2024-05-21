@@ -1,13 +1,12 @@
 import prompt from "prompt-sync";
 import sql from "./db_config/config";
 import User from "./models/User";
-import bcrypt from "bcrypt";
 import UserController from "./controllers/UserController";
 import ProductController from "./controllers/ProductController";
-import PromptSync from "prompt-sync";
 import Product from "./models/Product";
-// Define interfaces
-// Define interfaces
+import Faker from './faker/faker';
+import SaleController from "./controllers/SaleController";
+import Sale from "./models/Sale";
 var promptSync = prompt();
 let auth:User | undefined;
 
@@ -209,15 +208,17 @@ async function ownerMenu() {
     console.log(`(1) Accounts.
 (2) Search Products.
 (3) Add product
-(4) Manage Orders.
-(5) Manage Sales.
-(6) Check Inventory Levels.
-(7) Supply order.
-(8) Check Financial Records.
-(9) generate receipt.
-(10) Manage Refunds.
-(11) LogOut.
-(12) Exit System.`);
+(4) Edit Product
+(5) Delete Product
+(6) Manage Orders.
+(7) Manage Sales.
+(8) Check Inventory Levels.
+(9) Supply order.
+(10) Check Financial Records.
+(11) generate receipt.
+(12) Manage Refunds.
+(13) LogOut.
+(14) Exit System.`);
 
     var action = promptSync("Select an action : ");
 
@@ -227,14 +228,12 @@ async function ownerMenu() {
         console.log("Accounts");
         accounts();
         break;
-        // Implement Acounts logic
       }
       case "2": {
         console.clear();
         console.log("Search Products");
         searchProducts();
         break;
-        // Implement Search Products logic
       }
       case "3": {
         console.clear();
@@ -296,55 +295,132 @@ async function ownerMenu() {
       }
       case "4": {
         console.clear();
-        console.log("Manage Orders");
-        manageorders();
+        console.log("Edit a product");
+        let id:number;
+        while(true) {
+          id = parseInt(promptSync("Enter id of the product: "));
+          if(id >= 1) {
+            try {
+              const product = await ProductController.authSearch(id, auth?.id);
+              if(!product) break;
+              else {
+                console.clear();
+                console.log("Product of the inputted id not found, please input again...");
+              }
+            }
+            catch(error) {
+              console.log(error);
+            }
+          }
+        }
+        let attribute:string;
+        let attributes:string[] = ["name", "unit_price", "quantity", "stock_status", "category_id"];
+        let flag:boolean = false;
+        while(true) {
+          attribute = promptSync("What do you want to update? (Remember to put \"_\" at the place of spaces): ");
+          for(let i = 0; i < attributes.length; i++) {
+            if(attributes[i] === attribute) {
+              flag = true;
+              break;
+            }
+          }
+          if(!flag) {
+            promptSync("Attribute not found, press enter to input attribute again...");
+            console.clear();
+          }
+          else if(flag) break;
+        }
+        let value:any;
+        while(true) {
+          value = promptSync("Enter value of the field you want to update: ");
+          if(value.length >= 1) break;
+        }
+        if(attribute === "unit_price" || attribute === "quantity" || attribute === "category_id") value = parseInt(value);
+        try {
+          await ProductController.update(id, attribute, value);
+          console.log(`Successfully updated ${attribute}!`);
+          promptSync("Press enter to continue...");
+        }
+        catch(error) {
+          console.error(error);
+        }
         break;
       }
-      // Implement Manage Orders logic
       case "5": {
         console.clear();
-        console.log("Manage Sales");
-        managesales();
-        // Implement Manage Sales logic
+        console.log("Remove a Product");
+        let id:number;
+        while(true) {
+          id = parseInt(promptSync("Enter id of the product: "));
+          if(id >= 1) {
+            try {
+              const product = await ProductController.find(id);
+              if(!product) break;
+              else {
+                console.clear();
+                console.log("Product of the inputted id not found, please input again...");
+              }
+            }
+            catch(error) {
+              console.log(error);
+            }
+          }
+        }
+        try {
+          await ProductController.delete(id);
+          console.log("Product deleted successfully");
+          promptSync("Press enter to continue...");
+        }
+        catch(error) {
+          console.error(error);
+        }
         break;
       }
       case "6": {
         console.clear();
-        console.log("Check Inventory Levels");
-        checkinventory();
-        // Implement Check Inventory Levels logic
+        console.log("Manage Orders");
+        manageorders();
         break;
       }
       case "7": {
         console.clear();
-        console.log("Suppply order");
-        supplyorder();
-        // Implement Suppply order logic
+        console.log("Manage Sales");
+        managesales();
         break;
       }
       case "8": {
         console.clear();
-        console.log("Check Financial Records");
-        checkfinancialrecords();
-        // Implement Check Financial Records logic
+        console.log("Check Inventory Levels");
+        checkinventory();
         break;
       }
       case "9": {
         console.clear();
-        console.log("generate reciept");
-        generatereciept();
-        // Implement generate reciept logic
+        console.log("Suppply order");
+        supplyorder();
         break;
       }
       case "10": {
         console.clear();
+        console.log("Check Financial Records");
+        checkfinancialrecords();
+        break;
+      }
+      case "11": {
+        console.clear();
+        console.log("generate receipt");
+        let id:number = parseInt(promptSync("Enter the id of the sale to generate receipt: "));
+        generatereceipt(id);
+        break;
+      }
+      case "12": {
+        console.clear();
         console.log("Manage Refunds");
         managerefunds();
-        // Implement Manage Refunds logic
         break;
       }
 
-      case "11": {
+      case "13": {
         console.clear();
         auth = undefined;
         console.log("Logging out");
@@ -352,7 +428,7 @@ async function ownerMenu() {
         // Implement LogOut logic
         break;
       }
-      case "12": {
+      case "14": {
         auth = undefined;
         console.log("Exiting System...");
         process.exit();
@@ -457,9 +533,8 @@ async function customerMenu() {
       1. Browse Products.
       2. Search Products.
       3. Place Order.
-      4. Apply Refund.
-      5. Logout.
-      6. exit menu.`);
+      4. Logout.
+      5. exit menu.`);
 
       const action = promptSync("Select an action");
       switch (action) {
@@ -496,18 +571,12 @@ async function customerMenu() {
         }
         case "4": {
           console.clear();
-          console.log("REFUNDING");
-          refunds();
-          break;
-        }
-        case "5": {
-          console.clear();
           console.log("Logging out");
           auth = undefined;
           customerMenu();
           break;
         }
-        case "6": {
+        case "5": {
           console.clear();
           console.log("Exiting menu...");
           role();
@@ -669,41 +738,36 @@ function manageorders() {
   console.log("Manage Orders functionality");
 
   while (true) {
-    console.log(`(1) Add an Order Record.
-(2) Remove an Order Record.
-(3) Edit an Order Record.
-(4) View Order Records.
-(5) Find an Order Record.
-(6) exit.`);
+    console.log(`
+(1) Remove an Order Record.
+(2) Edit an Order Record.
+(3) View Order Records.
+(4) Find an Order Record.
+(5) exit.`);
 
     var choice = promptSync("Enter your choice: ");
     switch (choice) {
       case "1": {
-        console.log("Add an Order");
-        // Implement order management logic here
-      }
-
-      case "2": {
         console.log("Remove an Order");
         // Implement order management logic here
       }
 
-      case "3": {
+      case "2": {
         console.log("Edit an Order");
         // Implement order management logic here
       }
 
-      case "4": {
+      case "3": {
         console.log("View  Orders");
         // Implement order management logic here
       }
 
-      case "5": {
+      case "4": {
         console.log("Find  Orders");
         // Implement order management logic here
       }
 
-      case "6": {
+      case "5": {
         console.clear();
         console.log("Exiting ...");
         ownerMenu();
@@ -712,43 +776,104 @@ function manageorders() {
     }
   }
 }
-function managesales() {
+async function managesales() {
+  console.clear();
   console.log("Manage Sales functionality");
   while (true) {
     console.log(`(1) Add a Sale Record.
 (2) Remove a Sale Record.
-(3) Edit a Sale Record.
-(4) View Sale Records.
-(5) Find Sale Record.
-(6) Exit.`);
+(3) View Sale Records.
+(4) Find Sale Record.
+(5) Exit.`);
 
     var choice = promptSync("Enter your choice: ");
     switch (choice) {
       case "1": {
+        console.clear();
         console.log("Add a Sale Record");
-        // Implement sales management logic here
+        let id:number = Faker.randomInteger(1, 999999999);
+        let insertMore:string = "y";
+        let productName:string;
+        let product:Product[];
+        let quantity:number;
+        let total_amount:number = 0;
+        while(insertMore === "y" || insertMore === "Y" || insertMore === "Yes" || insertMore === "yes") {
+          while(true) {
+            productName = promptSync('Please enter the name of the Product: ');
+            product = await ProductController.findByName(productName, auth?.id);
+            quantity = parseInt(promptSync(`Please enter the quantity [Max: ${product[0].quantity}]: `));
+            if(product[0] && product[0].stock_status === 'in stock' && product[0].quantity > 0 && quantity <= product[0].quantity) break;
+            else if(product[0] && product[0].stock_status !== 'in stock' || product[0].quantity === 0) console.error("Product is out of stock, please input name of another product");
+            else if(product[0].quantity < quantity) console.error("Not enough quantity, please input again");
+            else console.error("Product not found, please input again");
+          }
+          total_amount += product[0].unit_price*quantity;
+          await new Promise((reject, resolve) => {
+            sql.query(`INSERT INTO sales_products (sales_id, product_id, quantity, unit_price, quantity_price) VALUES (?, ?, ?, ?, ?)`, [id, product[0].id, quantity, product[0].unit_price, product[0].unit_price*quantity], function(error, results) {
+              if(error) reject(error);
+              resolve(results);
+            })
+          });
+          await ProductController.update(product[0].id, 'quantity', (product[0].quantity-quantity));
+          if(product[0].quantity-quantity === 0) await ProductController.update(product[0].id, 'stock_status', 'out of stock');
+          insertMore = promptSync("Do you want to add more products? y/n: ");
+        }
+        await SaleController.authInsert(id, auth?.id, total_amount);
+        generatereceipt(id);
+        console.log("Products sold successfully");
+        promptSync("Press enter key to continue...");
       }
 
       case "2": {
+        console.clear();
         console.log("Remove a Sale Record");
-        // Implement sales management logic here
+        let id:number;
+        let sale:Sale[];
+        while(true) {
+          id = parseInt(promptSync("Enter the id of the sale record you want to delete: "));
+          if(id >= 1) break;
+        }
+        sale = await SaleController.find(id);
+        if(sale.length === 0) {
+          console.error("Sale does not exist");
+        }
+        else {
+          await SaleController.delete(sale[0].id);
+          console.log("Delete successful");
+        }
+        promptSync("Press enter key to continue...");
       }
 
       case "3": {
-        console.log("Edit a Sale Record");
-        // Implement sales management logic here
+        console.log("View  Sale records");
+        let sales:Sale[] = await SaleController.all();
+        if(sales.length === 0) {
+          console.error("There is no sale made yet");
+        }
+        else {
+          console.log(sales);
+        }
+        promptSync("Press enter key to continue...");
       }
 
       case "4": {
-        console.log("View  Sale records");
-        // Implement sales management logic here
-      }
-
-      case "5": {
         console.log("Find  Sale records");
-        // Implement sales management logic here
+        let id:number;
+        let sale:Sale[];
+        while(true) {
+          id = parseInt(promptSync("Enter the id of the sale record you want to find: "));
+          if(id >= 1) break;
+        }
+        sale = await SaleController.find(id);
+        if(sale.length === 0) {
+          console.error("Sale does not exist");
+        }
+        else {
+          console.log(sale);
+        }
+        promptSync("Press enter key to continue...");
       }
-      case "6": {
+      case "5": {
         console.clear();
         console.log("Exiting ...");
         ownerMenu();
@@ -865,10 +990,12 @@ function checkfinancialrecords() {
     }
   }
 }
-function generatereciept() {
-  var receipt = require("./receipt.js");
+async function generatereceipt(id:number) {
+  console.clear();
   console.log("Generate Receipt functionality");
-  // Implement receipt generation logic here
+  const result = await SaleController.generateReceipt(id);
+  if(result.length > 0) console.log(result);
+  else console.error("Sale not found");
 }
 
 // customer functions
@@ -963,37 +1090,8 @@ function searchProducts() {
       }
       default:
         console.log("Invalid option.");
-        searchproducts();
+        searchProducts();
     }
-    // Implement search products logic
-  }
-}
-function searchproducts() {
-  while (true) {
-    console.log(`Search products...
-  (1) search by product name
-  (2) search by product category
-  (3) exit`);
-
-    var choice = promptSync("");
-    switch (choice) {
-      case "1":
-        searchbyname();
-        break;
-      case "2":
-        searchbycategory();
-        break;
-      case "3": {
-        console.clear();
-        console.log("exiting");
-        customerMenu();
-        break;
-      }
-      default:
-        console.log("Invalid option.");
-        searchproducts();
-    }
-    // Implement search products logic
   }
 }
 
@@ -1065,5 +1163,5 @@ async function showAllproducts() {
 }
 
 // Start the login process
-showAllproducts();
+generatereceipt(1);
 export default role;  

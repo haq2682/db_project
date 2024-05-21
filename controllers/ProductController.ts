@@ -12,8 +12,8 @@ const ProductController = {
         let newProduct = new Product(name, unit_price, quantity, stock_status, category_id, user_id);
         newProduct.save();
     },
-    update: (id:number, attribute:string, value:unknown):void => {
-        Product.update(id, attribute, value);
+    update: async (id:number, attribute:string, value:unknown):Promise<void> => {
+        await Product.update(id, attribute, value);
     },
     delete: (id:number):unknown => {
         return Product.delete(id);
@@ -72,6 +72,14 @@ const ProductController = {
                 if(error) reject(error);
                 resolve(results);
             });
+        })
+    },
+    authSearch: async (id:number, user_id:unknown):Promise<Product> => {
+        return new Promise((resolve, reject) => {
+            sql.query(`SELECT *, products.id FROM products INNER JOIN categories ON products.category_id=cateogires.id WHERE products.id=? AND products.user_id=?`, [id, user_id], function(error, results) {
+                if(error) reject(error);
+                resolve(results);
+            })
         })
     }
 }
