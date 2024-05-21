@@ -53,7 +53,7 @@ class SupplyOrder {
   public static async find(id: number): Promise<SupplyOrder[]> {
     return new Promise((resolve, reject) => {
       sql.query(
-        "SELECT *,supplyorders.id FROM supplyorders WHERE id = ? inner join users on supplyorders.user_id=users.id inner join ",
+        "SELECT *,supplyorder.id FROM supplyorders inner join users on supplyorders.user_id = users.id inner join supplyorders_items on supplyorders.id = supplyorders_items.supplyOrder_id inner join items on supplyorders_items.item_id = items.id WHERE id = ? ",
         [id],
         (error, results) => {
           if (error) {
