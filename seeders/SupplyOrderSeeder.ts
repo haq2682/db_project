@@ -19,9 +19,9 @@ let SupplyOrderSeeder = async (length:number, dateStart:string, dateEnd:string) 
     let userCount:number = await getMaxId('users');
     let productCount:number = await getMaxId('products');
     
-    let isProductInItems = async (productId:number) => {
+    let isProductInItems = async (productId:number, user_id:number) => {
         return new Promise((resolve, reject) => {
-            sql.query(`SELECT * FROM items WHERE product_id=?`, [productId], (error, results) => {
+            sql.query(`SELECT * FROM items INNER JOIN products on items.product_id=products.id WHERE items.product_id=? AND products.user_id=?`, [productId, user_id], (error, results) => {
                 if (error) reject(error);
                 resolve(results.length > 0);
             });
@@ -39,36 +39,10 @@ let SupplyOrderSeeder = async (length:number, dateStart:string, dateEnd:string) 
     for (let i = 0; i < length; i++) {
         created_at = Faker.date(dateStart, dateEnd);
         updated_at = created_at;
-        
-        for (let i = 0; i < Faker.randomInteger(1, 10); i++) {
-            let attempts = 0;
-            let maxAttempts = 10;
-            let randomProductId:number;
-            let product:Product[];
-            while (attempts < maxAttempts) {
-                randomProductId = Faker.randomInteger(1, productCount);
-                product = await getProduct(randomProductId);
-                if (product && !(await isProductInItems(product[0].id))) {
-                    break;
-                }
-                attempts++;
-            }
-            if (attempts === maxAttempts) {
-                // console.log(`Failed to find a suitable product after ${maxAttempts} attempts`);
-                continue;
-            }
-    
-            await new Promise((resolve, reject) => {
-                sql.query(`INSERT INTO items (item_name, item_price, product_id, created_at, updated_at) VALUES (?,?,?,?,?)`, [product[0].name, product[0].unit_price, product[0].id, created_at, updated_at], function(error, results) {
-                    if(error) reject(error);
-                    resolve(results);
-                });
-            });
-        }
-    
+
         let attempts = 0;
         let maxAttempts = 10;
-        let randomUser:number;
+        let randomUser:number = 0;
         let user:User;
         while (attempts < maxAttempts) {
             randomUser = Faker.randomInteger(1, userCount);
@@ -105,6 +79,32 @@ let SupplyOrderSeeder = async (length:number, dateStart:string, dateEnd:string) 
                 resolve(results);
             });
         });
+
+        for (let i = 0; i < Faker.randomInteger(1, 10); i++) {
+            let attempts = 0;
+            let maxAttempts = 10;
+            let randomProductId:number;
+            let product:Product[];
+            while (attempts < maxAttempts) {
+                randomProductId = Faker.randomInteger(1, productCount);
+                product = await getProduct(randomProductId);
+                if (product && !(await isProductInItems(product[0].id, randomUser))) {
+                    break;
+                }
+                attempts++;
+            }
+            if (attempts === maxAttempts) {
+                // console.log(`Failed to find a suitable product after ${maxAttempts} attempts`);
+                continue;
+            }
+    
+            await new Promise((resolve, reject) => {
+                sql.query(`INSERT INTO items (item_name, item_price, product_id, created_at, updated_at) VALUES (?,?,?,?,?)`, [product[0].name, product[0].unit_price, product[0].id, created_at, updated_at], function(error, results) {
+                    if(error) reject(error);
+                    resolve(results);
+                });
+            });
+        }
     
         for (let j = 0; j < Faker.randomInteger(1, 5); j++) {
             attempts = 0;
