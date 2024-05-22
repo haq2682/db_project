@@ -6,7 +6,9 @@ import ProductController from "./controllers/ProductController";
 import Product from "./models/Product";
 import Faker from './faker/faker';
 import SaleController from "./controllers/SaleController";
+import OrderController from "./controllers/OrderController";
 import Sale from "./models/Sale";
+import Order from "./models/Order";
 var promptSync = prompt();
 let auth:User | undefined;
 
@@ -733,38 +735,100 @@ async function accounts() {
     }
   }
 }
-function manageorders() {
+async function manageorders() {
   console.clear();
   console.log("Manage Orders functionality");
 
   while (true) {
     console.log(`
 (1) Remove an Order Record.
-(2) Edit an Order Record.
-(3) View Order Records.
-(4) Find an Order Record.
+(2) View Order Records.
+(3) Find an Order Record By Order ID.
+(4) Find Order Records By Customer ID.
 (5) exit.`);
 
     var choice = promptSync("Enter your choice: ");
     switch (choice) {
       case "1": {
+        console.clear();
         console.log("Remove an Order");
-        // Implement order management logic here
+        let id:number;
+        let order:Order;
+        while(true) {
+          id = parseInt(promptSync("Please enter order number: "));
+          if(id >= 1) {
+            order = await OrderController.find(id);
+            if(order) {
+              await OrderController.delete(id);
+              promptSync("Order deleted Successfully... Please enter key to continue...");
+              break;
+            }
+            else {
+              console.error("Order not found. Please input again...");
+            }
+          }
+        }
+        break;
       }
 
       case "2": {
-        console.log("Edit an Order");
-        // Implement order management logic here
+        console.clear();
+        console.log("View Orders");
+        let id:number;
+        let orders:any;
+        orders = await OrderController.allByAuth(auth?.id);
+        if(orders.length > 0) {
+          console.log(orders);
+        }
+        else {
+          console.error("No orders found");
+        }
+        promptSync("Press enter key to continue...");
+        break;
       }
 
       case "3": {
-        console.log("View  Orders");
-        // Implement order management logic here
+        console.clear();
+        console.log("Find Order by Order ID");
+        let id:number;
+        let order:Order;
+        while(true) {
+          id = parseInt(promptSync("Please enter order number: "));
+          if(id >= 1) {
+            order = await OrderController.find(id);
+            if(order) {
+              console.log(order);
+              promptSync("Please enter key to continue...");
+              break;
+            }
+            else {
+              console.error("Order not found. Please input again...");
+            }
+          }
+        }
+        break;
       }
 
       case "4": {
-        console.log("Find  Orders");
-        // Implement order management logic here
+        console.clear();
+        console.log("Find Orders by Customer Username");
+        let username:string;
+        let order:any;
+        while(true) {
+          username = promptSync("Please enter customer username: ");
+          if(username.length >= 1) {
+            order = await OrderController.findOrderByCustomerUsername(username);
+            if(order) {
+              console.log(order);
+              promptSync("Please enter key to continue...");
+              break;
+            }
+            else {
+              console.error("Order not found. Please input again...");
+            }
+          }
+        }
+        break;
       }
 
       case "5": {
@@ -797,6 +861,7 @@ async function managesales() {
         let product:Product[];
         let quantity:number;
         let total_amount:number = 0;
+        let inserted:boolean = false;
         while(insertMore === "y" || insertMore === "Y" || insertMore === "Yes" || insertMore === "yes") {
           while(true) {
             productName = promptSync('Please enter the name of the Product: ');
@@ -808,6 +873,10 @@ async function managesales() {
             else console.error("Product not found, please input again");
           }
           total_amount += product[0].unit_price*quantity;
+          if(!inserted) {
+            await SaleController.authInsert(id, auth?.id, total_amount);
+            inserted = true;
+          }
           await new Promise((reject, resolve) => {
             sql.query(`INSERT INTO sales_products (sales_id, product_id, quantity, unit_price, quantity_price) VALUES (?, ?, ?, ?, ?)`, [id, product[0].id, quantity, product[0].unit_price, product[0].unit_price*quantity], function(error, results) {
               if(error) reject(error);
@@ -818,7 +887,6 @@ async function managesales() {
           if(product[0].quantity-quantity === 0) await ProductController.update(product[0].id, 'stock_status', 'out of stock');
           insertMore = promptSync("Do you want to add more products? y/n: ");
         }
-        await SaleController.authInsert(id, auth?.id, total_amount);
         generatereceipt(id);
         console.log("Products sold successfully");
         promptSync("Press enter key to continue...");
@@ -999,64 +1067,113 @@ async function generatereceipt(id:number) {
 }
 
 // customer functions
-function order() {
-  let productlist = [];
-  let quantitylist = [];
+async function order() {
   while (true) {
     console.log(`(1) Add Order.
-    (2) Remove Order.
-    (3) Edit Order.
-    (4) View Placed orders.
-    (5) Find Order.
-    (6) Exit.`);
+    (2) Cancel Order.
+    (3) View Placed Orders.
+    (4) Find Order.
+    (5) Exit.`);
 
     var action = promptSync("Enter Your Choice");
     switch (action) {
       case "1": {
-        const name = promptSync("Enter your name: ");
-        const address = promptSync("Enter your address: ");
-        const contactinfo = promptSync("Enter your contact info: ");
-        const productlist = promptSync("Enter the product names: ");
-        const quantitylist = promptSync("Enter the quantities: ");
-
-        // Implement order management logic here
-
-        console.log("Order placed successfully!");
+        console.clear();
+        console.log("Place an order");
+        let sales_id:number = Faker.randomInteger(1, 999999999);
+        let order_id:number = Faker.randomInteger(1, 999999999);
+        let insertMore:string = "y";
+        let productName:string;
+        let product:Product[];
+        let quantity:number;
+        let total_amount:number = 0;
+        let inserted:boolean = false;
+        while(insertMore === "y" || insertMore === "Y" || insertMore === "Yes" || insertMore === "yes") {
+          while(true) {
+            productName = promptSync('Please enter the name of the Product: ');
+            product = await ProductController.findByName(productName, auth?.id);
+            quantity = parseInt(promptSync(`Please enter the quantity [Max: ${product[0].quantity}]: `));
+            if(product[0] && product[0].stock_status === 'in stock' && product[0].quantity > 0 && quantity <= product[0].quantity) break;
+            else if(product[0] && product[0].stock_status !== 'in stock' || product[0].quantity === 0) console.error("Product is out of stock, please input name of another product");
+            else if(product[0].quantity < quantity) console.error("Not enough quantity, please input again");
+            else console.error("Product not found, please input again");
+          }
+          total_amount += product[0].unit_price*quantity;
+          if(!inserted) {
+            await SaleController.authInsert(sales_id, product[0].user_id, total_amount);
+            await OrderController.insert(sales_id, auth?.id);
+            inserted = true;
+          }
+          await new Promise((reject, resolve) => {
+            sql.query(`INSERT INTO sales_products (sales_id, product_id, quantity, unit_price, quantity_price) VALUES (?, ?, ?, ?, ?)`, [sales_id, product[0].id, quantity, product[0].unit_price, product[0].unit_price*quantity], function(error, results) {
+              if(error) reject(error);
+              resolve(results);
+            })
+          });
+          await ProductController.update(product[0].id, 'quantity', (product[0].quantity-quantity));
+          if(product[0].quantity-quantity === 0) await ProductController.update(product[0].id, 'stock_status', 'out of stock');
+          insertMore = promptSync("Do you want to add more products? y/n: ");
+        }
+        generatereceipt(sales_id);
+        console.log("Order Placed Successfully... Please note down this Order Number: " + order_id + "\nAnd Receipt Number: " + sales_id);
+        promptSync("Press enter key to continue...");
+        break;
       }
 
       case "2": {
-        if (productlist.length === 0) {
-          console.log("No products to remove");
-          break;
+        console.clear();
+        console.log("Cancelling an order");
+        let id:number;
+        let order:Order;
+        while(true) {
+          id = parseInt(promptSync("Please enter Order Number: "));
+          if(id >= 1) {
+            order = await OrderController.find(id);
+            if(!order) console.error("Order not found. Please input again");
+            else break;
+          }
         }
-        const product = promptSync("Enter the product name: ");
+        await OrderController.cancelOrder(id);
+        console.log("Order cancelled successfully");
+        break;
       }
 
       case "3": {
-        if (productlist.length === 0) {
-          console.log("No products to edit");
-          break;
-        }
-        const product = promptSync("Enter the product name: ");
+        console.clear();
+        let orders:any = OrderController.allByCustomer(auth?.id);
+        console.log(orders);
+        promptSync("Press enter key to continue...");
+        break;
       }
-
       case "4": {
-        if (productlist.length === 0) {
-          console.log("No products to view");
-          break;
+        console.clear();
+        let id:number;
+        let order:any;
+        while(true) {
+          id = parseInt(promptSync("Enter Order Number: "));
+          if(id >= 1) {
+            order = OrderController.find(id);
+            if(order) {
+              console.log(order);
+              promptSync("Press enter key to continue...");
+              break;
+            }
+            else {
+              console.error("Order not found, please input again");
+            }
+          }
         }
-        //implementation
-        break;
-      }
-      case "5": {
-        //implementation
         break;
       }
 
-      case "6": {
+      case "5": {
         console.clear();
         console.log("exiting");
         customerMenu();
+        break;
+      }
+      default: {
+        console.log("Invalid Input. Please Input again");
         break;
       }
     }

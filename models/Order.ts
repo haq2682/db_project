@@ -42,7 +42,7 @@ class Order {
         }
     }
 
-    public static async all():Promise<unknown> {
+    public static async all():Promise<Order[]> {
         return new Promise((resolve) => {
             sql.query(`select *, orders.id from orders inner join users on orders.user_id=users.id inner join sales on orders.sales_id=sales.id inner join sales_products on sales.id=sales_products.sales_id inner join products on sales_products.product_id=products.id`, 
             function(error, results) {
@@ -55,14 +55,14 @@ class Order {
         })
     }
 
-    public static async find(id:number):Promise<unknown> {
+    public static async find(id:number):Promise<Order> {
         return new Promise((resolve) => {
             sql.query(`select *, orders.id from orders where id=? inner join users on orders.user_id=users.id inner join sales on orders.sales_id=sales.id inner join sales_products on sales.id=sales_products.sales_id inner join products on sales_products.product_id=products.id`, [id], function(error, results) {
                 if(error) {
                     console.error("Error fetching order: ", error.sqlMessage);
                     return;
                 }
-                resolve(results);
+                resolve(results[0] as Order);
             })
         });
     }

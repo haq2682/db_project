@@ -19,7 +19,7 @@ export default async function SaleMigration():Promise<void> {
             sql.query(`
                 CREATE TABLE IF NOT EXISTS sales (
                     id INT PRIMARY KEY NOT NULL,
-                    user_id INT NOT NULL,
+                    user_id INT NULL,
                     total_amount FLOAT NOT NULL,
                     is_refunded TINYINT(1) NOT NULL DEFAULT 0,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
