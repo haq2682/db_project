@@ -12,8 +12,8 @@ class Order {
     public delivery_status:string;
     public is_cancelled:number;
 
-    public constructor(sales_id?:number, user_id?:number) {
-        this.id = Faker.randomInteger(1, 999999999);
+    public constructor(id:number, sales_id?:number, user_id?:number) {
+        this.id = id ?? Faker.randomInteger(1, 999999999);
         this.sales_id = sales_id ?? 0;
         this.user_id = user_id ?? 0;
         this.delivery_status = 'provided to shipper';

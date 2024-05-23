@@ -4,10 +4,10 @@ import prompt from 'prompt-sync';
 
 async function main() {
     // await connectToDatabase();
-    await menu();
-    let promptSync = prompt();
-    promptSync("Press enter key to exit the program...");
-    process.exit();
+    menu();
+    // let promptSync = prompt();
+    // promptSync("Press enter key to exit the program...");
+    // process.exit();
 }
 
 main();

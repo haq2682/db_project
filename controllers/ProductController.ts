@@ -18,7 +18,7 @@ const ProductController = {
     delete: (id:number):unknown => {
         return Product.delete(id);
     },
-    findByName: async (name:string, authID:unknown):Promise<Product[]> => {
+    findByName: async (name:string, authID:unknown):Promise<any> => {
         return new Promise((resolve, reject) => {
             const query = `
                 SELECT *, products.id 
@@ -30,7 +30,7 @@ const ProductController = {
             const formattedName = `%${name}%`;
             sql.query(query, [authID, formattedName], function (error, results) {
                 if (error) reject(error);
-                resolve(results as Product[]);
+                resolve(results[0]);
             });
         })
     },
@@ -66,11 +66,12 @@ const ProductController = {
             })
         })
     },
-    customerSearch: async (name:string):Promise<Product[]> => {
+    customerSearch: async (name:string):Promise<any> => {
+        let string = `%${name}%`;
         return new Promise((resolve, reject) => {
-            sql.query(`SELECT *, products.id FROM products INNER JOIN categories ON products.category_id=categories.id WHERE products.name LIKE ?`, [name], function(error, results) {
+            sql.query(`SELECT *, products.id FROM products INNER JOIN categories ON products.category_id=categories.id WHERE products.name LIKE ?`, [string], function(error, results) {
                 if(error) reject(error);
-                resolve(results);
+                resolve(results[0]);
             });
         })
     },

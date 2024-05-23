@@ -7,8 +7,8 @@ const OrderController = {
     find: async (id:number):Promise<Order> => {
         return await Order.find(id);
     },
-    insert: async (sales_id:number, user_id:number|undefined):Promise<void> => {
-        let newOrder = new Order(sales_id, user_id);
+    insert: async (id:number, sales_id:number, user_id:number|undefined):Promise<void> => {
+        let newOrder = new Order(id, sales_id, user_id);
         await newOrder.save();
     },
     update: (id:number, attribute:string, value:string):void => {

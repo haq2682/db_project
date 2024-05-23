@@ -20,19 +20,27 @@ const UserController = {
     },
     checkUsername: async (username:string):Promise<boolean> => {
         return new Promise((resolve) => {
-            sql.query(`SELECT username FROM users WHERE username=?`, [username], function(error, results) {
+            sql.query(`SELECT *, users.id FROM users WHERE username=?`, [username], function(error, results) {
                 if(results.length > 0) resolve(false);
                 else resolve(true);
             })
         });
     },
-    findByUsername: async (username:string):Promise<User> => {
+    findByUsername: async (username:string):Promise<any> => {
         return new Promise((resolve, reject) => {
-            sql.query(`SELECT * FROM users INNER JOIN roles on users.role_id=roles.id WHERE INNER JOIN orders ON orders.user_id=users.id INNER JOIN sales ON sales.user_id=users.id username=?`, [username], function(error, results) {
+            sql.query(`SELECT * FROM users LEFT JOIN roles on users.role_id=roles.id LEFT JOIN orders ON orders.user_id=users.id LEFT JOIN sales ON sales.user_id=users.id WHERE users.username=?`, [username], function(error, results) {
                 if(error) reject(error);
-                else resolve(results[0] as User);
+                resolve(results[0]);
             });
         });
+    },
+    loginFind: async (username:string):Promise<User> => {
+        return new Promise((resolve, reject) => {
+            sql.query(`SELECT *, users.id FROM users WHERE username=?`, [username], function(error, results) {
+                if(error) reject(error);
+                resolve(results[0]);
+            })
+        })
     },
     deleteByUsername: async (username:string):Promise<void> => {
         return new Promise((resolve, reject) => {
@@ -52,7 +60,7 @@ const UserController = {
     },
     allCustomers: async ():Promise<User[]> => {
         return new Promise((resolve, reject) => {
-            sql.query(`SELECT * FROM users INNER JOIN orders ON orders.user_id=users.id INNER JOIN sales ON sales.user_id=users.id WHERE role_id = 2`, function(error, results) {
+            sql.query(`SELECT * FROM users LEFT JOIN orders ON orders.user_id=users.id LEFT JOIN sales ON sales.user_id=users.id WHERE role_id = 2`, function(error, results) {
                 if(results.length <= 0) reject("No customers found");
                 resolve(results as User[]);
             });
@@ -60,7 +68,7 @@ const UserController = {
     },
     findOwner: async (id:number):Promise<User> => {
         return new Promise((resolve, reject) => {
-            sql.query(`SELECT *, users.id FROM users INNER JOIN roles ON users.role_id=roles.id WHERE roles.role='owner' AND users.id=?`, [id], function(error, results) {
+            sql.query(`SELECT *, users.id FROM users LEFT JOIN roles ON users.role_id=roles.id WHERE roles.role='owner' AND users.id=?`, [id], function(error, results) {
                 if(error) reject(error);
                 resolve(results[0] as User);
             })
@@ -68,7 +76,7 @@ const UserController = {
     },
     findCustomer: async (id:number):Promise<User> => {
         return new Promise((resolve, reject) => {
-            sql.query(`SELECT *, users.id FROM users INNER JOIN roles ON users.role_id=roles.id WHERE roles.role='customer' AND users.id=?`, [id], function(error, results) {
+            sql.query(`SELECT *, users.id FROM users LEFT JOIN roles ON users.role_id=roles.id WHERE roles.role='customer' AND users.id=?`, [id], function(error, results) {
                 if(error) reject(error);
                 resolve(results[0] as User);
             })

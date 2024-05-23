@@ -58,7 +58,7 @@ async function role() {
     }
   }
 }
-function Owner() {
+async function Owner() {
   console.log("----Welcome To Online Pharmacy----");
   console.log(`1. Login.
 2. Register.
@@ -68,12 +68,12 @@ function Owner() {
   switch (action) {
     case "1": {
       console.clear();
-      login();
+      await login();
       break;
     }
     case "2": {
       console.clear();
-      register();
+      await register();
       break;
     }
     case "3": {
@@ -166,14 +166,15 @@ async function login() {
   console.clear();
   console.log("----login to ONLINE PHARMACY----");
   
-  let user: User | undefined;
+  let user;
   let username: string;
   let password: string;
 
   username = promptSync("Enter your username: ");
 
   try {
-    user = await UserController.findByUsername(username);    
+    user = await UserController.loginFind(username);
+    console.log(user);
   }
 
   catch(error) {
@@ -465,8 +466,9 @@ async function customerMenu() {
       switch (action) {
         case "1": {
           console.log("products...");
-          showAllproducts();
-          break;
+          await showAllproducts();
+          promptSync("Press enter key to continue...");
+          customerMenu();
         }
         case "2": {
           console.clear();
@@ -482,10 +484,9 @@ async function customerMenu() {
             else {
               console.log(item);
               promptSync("Press enter key to continue...");
-              break;
+              customerMenu();
             }
           }
-          break;
         }
         case "3": {
           if (!auth) {
@@ -496,7 +497,7 @@ async function customerMenu() {
           } else {
             console.clear();
             console.log("ORDER");
-            order();
+            await order();
             break;
           }
         }
@@ -509,13 +510,13 @@ async function customerMenu() {
         case "5": {
           console.clear();
           console.log("Login");
-          login();
+          await login();
           break;
         }
         case "6": {
           console.clear();
           console.log("Register");
-          register();
+          await register();
           break;
         }
         case "7": {
@@ -542,8 +543,9 @@ async function customerMenu() {
       switch (action) {
         case "1": {
           console.log("products...");
-          showAllproducts();
-          break;
+          await showAllproducts();
+          promptSync("Press enter key to continue...");
+          customerMenu();
         }
         case "2": {
           console.log("");
@@ -560,15 +562,14 @@ async function customerMenu() {
             else {
               console.log(item);
               promptSync("Press enter key to continue...");
-              break;
+              customerMenu();
             }
           }
-          break;
         }
         case "3": {
           console.clear();
           console.log("ORDER");
-          order();
+          await order();
           break;
         }
         case "4": {
@@ -858,14 +859,19 @@ async function managesales() {
         let id:number = Faker.randomInteger(1, 999999999);
         let insertMore:string = "y";
         let productName:string;
-        let product:Product[];
+        let product:any;
         let quantity:number;
         let total_amount:number = 0;
         let inserted:boolean = false;
         while(insertMore === "y" || insertMore === "Y" || insertMore === "Yes" || insertMore === "yes") {
           while(true) {
             productName = promptSync('Please enter the name of the Product: ');
-            product = await ProductController.findByName(productName, auth?.id);
+            try {
+              product = await ProductController.findByName(productName, auth?.id);
+            }
+            catch(error) {
+              console.error(error);
+            }
             quantity = parseInt(promptSync(`Please enter the quantity [Max: ${product[0].quantity}]: `));
             if(product[0] && product[0].stock_status === 'in stock' && product[0].quantity > 0 && quantity <= product[0].quantity) break;
             else if(product[0] && product[0].stock_status !== 'in stock' || product[0].quantity === 0) console.error("Product is out of stock, please input name of another product");
@@ -874,20 +880,45 @@ async function managesales() {
           }
           total_amount += product[0].unit_price*quantity;
           if(!inserted) {
-            await SaleController.authInsert(id, auth?.id, total_amount);
-            inserted = true;
+            try {
+              await SaleController.authInsert(id, auth?.id, total_amount);
+              inserted = true;
+            }
+            catch(error) {
+              console.error(error);
+            }
           }
-          await new Promise((reject, resolve) => {
-            sql.query(`INSERT INTO sales_products (sales_id, product_id, quantity, unit_price, quantity_price) VALUES (?, ?, ?, ?, ?)`, [id, product[0].id, quantity, product[0].unit_price, product[0].unit_price*quantity], function(error, results) {
-              if(error) reject(error);
-              resolve(results);
-            })
-          });
-          await ProductController.update(product[0].id, 'quantity', (product[0].quantity-quantity));
-          if(product[0].quantity-quantity === 0) await ProductController.update(product[0].id, 'stock_status', 'out of stock');
+          try {
+            await new Promise((reject, resolve) => {
+              sql.query(`INSERT INTO sales_products (sales_id, product_id, quantity, unit_price, quantity_price) VALUES (?, ?, ?, ?, ?)`, [id, product[0].id, quantity, product[0].unit_price, product[0].unit_price*quantity], function(error, results) {
+                if(error) reject(error);
+                resolve(results);
+              })
+            });
+          }
+          catch(error) {
+            console.error(error);
+          }
+          try {
+            await ProductController.update(product[0].id, 'quantity', (product[0].quantity-quantity));
+          }
+          catch(error) {
+            console.error(error);
+          }
+          try {
+            if(product[0].quantity-quantity === 0) await ProductController.update(product[0].id, 'stock_status', 'out of stock');
+          }
+          catch(error) {
+            console.error(error);
+          }
           insertMore = promptSync("Do you want to add more products? y/n: ");
         }
-        generatereceipt(id);
+        try {
+          await generatereceipt(id);
+        }
+        catch(error) {
+          console.error(error);
+        }
         console.log("Products sold successfully");
         promptSync("Press enter key to continue...");
       }
@@ -1061,9 +1092,13 @@ function checkfinancialrecords() {
 async function generatereceipt(id:number) {
   console.clear();
   console.log("Generate Receipt functionality");
-  const result = await SaleController.generateReceipt(id);
-  if(result.length > 0) console.log(result);
-  else console.error("Sale not found");
+  try {
+    const result = await SaleController.generateReceipt(id);
+    if(result.length > 0) console.log(result);
+  }
+  catch(error) {
+    console.error(error);
+  }
 }
 
 // customer functions
@@ -1079,42 +1114,68 @@ async function order() {
     switch (action) {
       case "1": {
         console.clear();
+        console.log(auth?.id);
         console.log("Place an order");
         let sales_id:number = Faker.randomInteger(1, 999999999);
         let order_id:number = Faker.randomInteger(1, 999999999);
         let insertMore:string = "y";
         let productName:string;
-        let product:Product[];
+        let product:any;
         let quantity:number;
         let total_amount:number = 0;
         let inserted:boolean = false;
         while(insertMore === "y" || insertMore === "Y" || insertMore === "Yes" || insertMore === "yes") {
           while(true) {
             productName = promptSync('Please enter the name of the Product: ');
-            product = await ProductController.findByName(productName, auth?.id);
-            quantity = parseInt(promptSync(`Please enter the quantity [Max: ${product[0].quantity}]: `));
-            if(product[0] && product[0].stock_status === 'in stock' && product[0].quantity > 0 && quantity <= product[0].quantity) break;
-            else if(product[0] && product[0].stock_status !== 'in stock' || product[0].quantity === 0) console.error("Product is out of stock, please input name of another product");
-            else if(product[0].quantity < quantity) console.error("Not enough quantity, please input again");
+            try {
+              product = await ProductController.customerSearch(productName);
+            }
+            catch(error) {
+              console.error(error);
+            }
+            quantity = parseInt(promptSync(`Please enter the quantity [Max: ${product.quantity}]: `));
+            if(product && product.stock_status === 'in stock' && product.quantity > 0 && quantity <= product.quantity) break;
+            else if(product && product.stock_status !== 'in stock' || product.quantity === 0) console.error("Product is out of stock, please input name of another product");
+            else if(product.quantity < quantity) console.error("Not enough quantity, please input again");
             else console.error("Product not found, please input again");
           }
-          total_amount += product[0].unit_price*quantity;
+          total_amount += product.unit_price*quantity;
           if(!inserted) {
-            await SaleController.authInsert(sales_id, product[0].user_id, total_amount);
-            await OrderController.insert(sales_id, auth?.id);
+            await SaleController.authInsert(sales_id, product.user_id, total_amount);
+            await OrderController.insert(order_id, sales_id, auth?.id);
             inserted = true;
           }
-          await new Promise((reject, resolve) => {
-            sql.query(`INSERT INTO sales_products (sales_id, product_id, quantity, unit_price, quantity_price) VALUES (?, ?, ?, ?, ?)`, [sales_id, product[0].id, quantity, product[0].unit_price, product[0].unit_price*quantity], function(error, results) {
-              if(error) reject(error);
-              resolve(results);
-            })
-          });
-          await ProductController.update(product[0].id, 'quantity', (product[0].quantity-quantity));
-          if(product[0].quantity-quantity === 0) await ProductController.update(product[0].id, 'stock_status', 'out of stock');
+          try {
+            await new Promise((reject, resolve) => {
+              sql.query(`INSERT INTO sales_products (sales_id, product_id, quantity, unit_price, quantity_price) VALUES (?, ?, ?, ?, ?)`, [sales_id, product.id, quantity, product.unit_price, product.unit_price*quantity], function(error, results) {
+                if(error) reject(error);
+                resolve(results);
+              })
+            });
+          }
+          catch(error) {
+            console.error(error);
+          }
+          try {
+            await ProductController.update(product.id, 'quantity', (product.quantity-quantity));
+          }
+          catch(error) {
+            console.error(error);
+          }
+          try {
+            if(product.quantity-quantity === 0) await ProductController.update(product.id, 'stock_status', 'out of stock');
+          }
+          catch(error) {
+            console.error(error);
+          }
           insertMore = promptSync("Do you want to add more products? y/n: ");
         }
-        generatereceipt(sales_id);
+        try {
+          await generatereceipt(sales_id);
+        }
+        catch(error) {
+          console.error(error);
+        }
         console.log("Order Placed Successfully... Please note down this Order Number: " + order_id + "\nAnd Receipt Number: " + sales_id);
         promptSync("Press enter key to continue...");
         break;
@@ -1140,7 +1201,7 @@ async function order() {
 
       case "3": {
         console.clear();
-        let orders:any = OrderController.allByCustomer(auth?.id);
+        let orders:any = await OrderController.allByCustomer(auth?.id);
         console.log(orders);
         promptSync("Press enter key to continue...");
         break;
@@ -1152,7 +1213,7 @@ async function order() {
         while(true) {
           id = parseInt(promptSync("Enter Order Number: "));
           if(id >= 1) {
-            order = OrderController.find(id);
+            order = await OrderController.find(id);
             if(order) {
               console.log(order);
               promptSync("Press enter key to continue...");
@@ -1275,10 +1336,13 @@ function managerefunds() {
 async function showAllproducts() {
   console.clear();
   console.log("Showing all products...");
-  let products:Product[] = await ProductController.allByCustomer();
-  console.log(products);
+  try {
+    let products = await ProductController.allByCustomer();
+    console.log(products);
+    promptSync("Press enter key to continue...");
+  }
+  catch(error) {
+    console.error(error);
+  }
 }
-
-// Start the login process
-generatereceipt(1);
 export default role;  
