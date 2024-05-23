@@ -111,7 +111,7 @@ END //
 
 DELIMITER ;
 
-
+-----ORDER PROCEDURES------
 
 DELIMITER //
 
@@ -614,6 +614,7 @@ END //
 
 DELIMITER ;
 
+-----SUPPLYORDER PROCEDURES------
 
 DELIMITER //
 
@@ -852,7 +853,8 @@ END //
 
 DELIMITER ;
 
-DELIMITER //
+-----SALES PROCEDURES------
+
 DELIMITER //
 
 CREATE PROCEDURE add_sales_transaction(
@@ -1089,6 +1091,8 @@ END //
 
 DELIMITER ;
 
+-----PRODUCT PROCEDURES------
+
 DELIMITER //
 
 CREATE PROCEDURE add_product(
@@ -1268,6 +1272,7 @@ END //
 
 DELIMITER ;
 
+-----ITEMS PROCEDURES------
 
 DELIMITER //
 
@@ -1411,7 +1416,7 @@ END //
 
 DELIMITER ;
 
---alternative_supplyorder_procedure
+--alternative_supplyorder_procedures
 
 DELIMITER //
 
