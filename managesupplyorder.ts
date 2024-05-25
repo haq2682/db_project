@@ -19,8 +19,8 @@ async function manageSupplyOrders() {
         const id = Faker.randomInteger(1, 999999999);
         let insertMore = "y";
         let itemName;
-        let item;
-        let quantity;
+        let item: any;
+        let quantity : number;
         let total_amount = 0;
         let inserted = false;
 
