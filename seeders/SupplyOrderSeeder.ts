@@ -87,7 +87,10 @@ let SupplyOrderSeeder = async (length:number, dateStart:string, dateEnd:string) 
             let product:Product[];
             while (attempts < maxAttempts) {
                 randomProductId = Faker.randomInteger(1, productCount);
-                product = await getProduct(randomProductId);
+                while(true) {
+                    product = await getProduct(randomProductId);
+                    if(product) break;
+                }
                 if (product && !(await isProductInItems(product[0].id, randomUser))) {
                     break;
                 }

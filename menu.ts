@@ -40,12 +40,12 @@ async function role() {
   switch (r) {
     case "1": {
       console.clear();
-      Owner();
+      await Owner();
       break;
     }
     case "2": {
       console.clear();
-      customerMenu();
+      await customerMenu();
       break;
     }
     case "0":
@@ -53,7 +53,7 @@ async function role() {
     default: {
       console.clear();
       console.log("Invalid role selected.");
-      role();
+      await role();
       break;
     }
   }
@@ -79,12 +79,12 @@ async function Owner() {
     case "3": {
       console.clear();
       console.log("exiting");
-      role();
+      await role();
     }
     default: {
       console.clear();
       console.log("Invalid option selected.");
-      Owner();
+      await Owner();
       break;
     }
   }
@@ -160,21 +160,20 @@ async function register() {
   console.log("User created successfully!");
   promptSync("Press enter to continue...");
   console.clear();
-  Owner();
+  await Owner();
 }
 async function login() {
   console.clear();
   console.log("----login to ONLINE PHARMACY----");
   
-  let user;
+  let user: User | undefined;
   let username: string;
   let password: string;
 
   username = promptSync("Enter your username: ");
 
   try {
-    user = await UserController.loginFind(username);
-    console.log(user);
+    user = await UserController.findByUsername(username);    
   }
 
   catch(error) {
@@ -229,13 +228,13 @@ async function ownerMenu() {
       case "1": {
         console.clear();
         console.log("Accounts");
-        accounts();
+        await accounts();
         break;
       }
       case "2": {
         console.clear();
         console.log("Search Products");
-        searchProducts();
+        await searchProducts();
         break;
       }
       case "3": {
@@ -382,44 +381,44 @@ async function ownerMenu() {
       case "6": {
         console.clear();
         console.log("Manage Orders");
-        manageorders();
+        await manageorders();
         break;
       }
       case "7": {
         console.clear();
         console.log("Manage Sales");
-        managesales();
+        await managesales();
         break;
       }
       case "8": {
         console.clear();
         console.log("Check Inventory Levels");
-        checkinventory();
+        await checkinventory();
         break;
       }
       case "9": {
         console.clear();
         console.log("Suppply order");
-        supplyorder();
+        await supplyorder();
         break;
       }
       case "10": {
         console.clear();
         console.log("Check Financial Records");
-        checkfinancialrecords();
+        await checkfinancialrecords();
         break;
       }
       case "11": {
         console.clear();
         console.log("generate receipt");
         let id:number = parseInt(promptSync("Enter the id of the sale to generate receipt: "));
-        generatereceipt(id);
+        await generatereceipt(id);
         break;
       }
       case "12": {
         console.clear();
         console.log("Manage Refunds");
-        managerefunds();
+        await managerefunds();
         break;
       }
 
@@ -428,19 +427,17 @@ async function ownerMenu() {
         auth = undefined;
         console.log("Logging out");
         role();
-        // Implement LogOut logic
         break;
       }
       case "14": {
         auth = undefined;
         console.log("Exiting System...");
         process.exit();
-        // Implement Exit System logic
       }
       default: {
         console.clear();
         console.log("Invalid option.");
-        ownerMenu();
+        await ownerMenu();
         break;
       }
     }
@@ -465,10 +462,9 @@ async function customerMenu() {
       const action = promptSync("Select an action: ");
       switch (action) {
         case "1": {
-          console.log("products...");
           await showAllproducts();
-          promptSync("Press enter key to continue...");
-          customerMenu();
+          promptSync("Press enter key to continue...")
+          break;
         }
         case "2": {
           console.clear();
@@ -484,15 +480,16 @@ async function customerMenu() {
             else {
               console.log(item);
               promptSync("Press enter key to continue...");
-              customerMenu();
+              break;
             }
           }
+          break;
         }
         case "3": {
           if (!auth) {
             console.clear();
             console.log("please login/ Register first");
-            Owner();
+            await Owner();
             break;
           } else {
             console.clear();
@@ -504,7 +501,7 @@ async function customerMenu() {
         case "4": {
           console.clear();
           console.log("REFUNDING");
-          refunds();
+          await refunds();
           break;
         }
         case "5": {
@@ -522,12 +519,12 @@ async function customerMenu() {
         case "7": {
           console.clear();
           console.log("Exiting menu...");
-          role();
+          await role();
           break;
         }
         default:
           console.log("Invalid option.");
-          customerMenu();
+          await customerMenu();
       }
     }
   } else if (auth) {
@@ -545,10 +542,9 @@ async function customerMenu() {
           console.log("products...");
           await showAllproducts();
           promptSync("Press enter key to continue...");
-          customerMenu();
+          break;
         }
         case "2": {
-          console.log("");
           console.clear();
           console.log("Search Products");
           let name:string;
@@ -562,9 +558,10 @@ async function customerMenu() {
             else {
               console.log(item);
               promptSync("Press enter key to continue...");
-              customerMenu();
+              break;
             }
           }
+          break;
         }
         case "3": {
           console.clear();
@@ -576,18 +573,18 @@ async function customerMenu() {
           console.clear();
           console.log("Logging out");
           auth = undefined;
-          customerMenu();
+          await customerMenu();
           break;
         }
         case "5": {
           console.clear();
           console.log("Exiting menu...");
-          role();
+          await role();
           break;
         }
         default:
           console.log("Invalid option.");
-          customerMenu();
+          await customerMenu();
       }
     }
   }
@@ -730,7 +727,7 @@ async function accounts() {
       case "6": {
         console.clear();
         console.log("Exiting ...");
-        ownerMenu();
+        await ownerMenu();
         break;
       }
     }
@@ -775,7 +772,6 @@ async function manageorders() {
       case "2": {
         console.clear();
         console.log("View Orders");
-        let id:number;
         let orders:any;
         orders = await OrderController.allByAuth(auth?.id);
         if(orders.length > 0) {
@@ -835,7 +831,7 @@ async function manageorders() {
       case "5": {
         console.clear();
         console.log("Exiting ...");
-        ownerMenu();
+        await ownerMenu();
         break;
       }
     }
@@ -859,19 +855,14 @@ async function managesales() {
         let id:number = Faker.randomInteger(1, 999999999);
         let insertMore:string = "y";
         let productName:string;
-        let product:any;
+        let product:Product[];
         let quantity:number;
         let total_amount:number = 0;
         let inserted:boolean = false;
         while(insertMore === "y" || insertMore === "Y" || insertMore === "Yes" || insertMore === "yes") {
           while(true) {
             productName = promptSync('Please enter the name of the Product: ');
-            try {
-              product = await ProductController.findByName(productName, auth?.id);
-            }
-            catch(error) {
-              console.error(error);
-            }
+            product = await ProductController.findByName(productName, auth?.id);
             quantity = parseInt(promptSync(`Please enter the quantity [Max: ${product[0].quantity}]: `));
             if(product[0] && product[0].stock_status === 'in stock' && product[0].quantity > 0 && quantity <= product[0].quantity) break;
             else if(product[0] && product[0].stock_status !== 'in stock' || product[0].quantity === 0) console.error("Product is out of stock, please input name of another product");
@@ -880,47 +871,23 @@ async function managesales() {
           }
           total_amount += product[0].unit_price*quantity;
           if(!inserted) {
-            try {
-              await SaleController.authInsert(id, auth?.id, total_amount);
-              inserted = true;
-            }
-            catch(error) {
-              console.error(error);
-            }
+            await SaleController.authInsert(id, auth?.id, total_amount);
+            inserted = true;
           }
-          try {
-            await new Promise((reject, resolve) => {
-              sql.query(`INSERT INTO sales_products (sales_id, product_id, quantity, unit_price, quantity_price) VALUES (?, ?, ?, ?, ?)`, [id, product[0].id, quantity, product[0].unit_price, product[0].unit_price*quantity], function(error, results) {
-                if(error) reject(error);
-                resolve(results);
-              })
-            });
-          }
-          catch(error) {
-            console.error(error);
-          }
-          try {
-            await ProductController.update(product[0].id, 'quantity', (product[0].quantity-quantity));
-          }
-          catch(error) {
-            console.error(error);
-          }
-          try {
-            if(product[0].quantity-quantity === 0) await ProductController.update(product[0].id, 'stock_status', 'out of stock');
-          }
-          catch(error) {
-            console.error(error);
-          }
+          await new Promise((reject, resolve) => {
+            sql.query(`INSERT INTO sales_products (sales_id, product_id, quantity, unit_price, quantity_price) VALUES (?, ?, ?, ?, ?)`, [id, product[0].id, quantity, product[0].unit_price, product[0].unit_price*quantity], function(error, results) {
+              if(error) reject(error);
+              resolve(results);
+            })
+          });
+          await ProductController.update(product[0].id, 'quantity', (product[0].quantity-quantity));
+          if(product[0].quantity-quantity === 0) await ProductController.update(product[0].id, 'stock_status', 'out of stock');
           insertMore = promptSync("Do you want to add more products? y/n: ");
         }
-        try {
-          await generatereceipt(id);
-        }
-        catch(error) {
-          console.error(error);
-        }
+        await generatereceipt(id);
         console.log("Products sold successfully");
         promptSync("Press enter key to continue...");
+        break;
       }
 
       case "2": {
@@ -975,7 +942,7 @@ async function managesales() {
       case "5": {
         console.clear();
         console.log("Exiting ...");
-        ownerMenu();
+        await ownerMenu();
         break;
       }
     }
@@ -993,7 +960,7 @@ async function checkinventory() {
     console.log(error);
   }
 }
-function supplyorder() {
+async function supplyorder() {
   console.log("Supply Order functionality");
 
   while (true) {
@@ -1029,13 +996,13 @@ function supplyorder() {
       case "6": {
         console.clear();
         console.log("Exiting ...");
-        ownerMenu();
+        await ownerMenu();
         break;
       }
     }
   }
 }
-function checkfinancialrecords() {
+async function checkfinancialrecords() {
   console.log("Check Financial Records functionality");
   while (true) {
     console.log(`(1) Check Monthly Profit.
@@ -1081,7 +1048,7 @@ function checkfinancialrecords() {
       case "7": {
         console.clear();
         console.log("Exiting..");
-        customerMenu();
+        await customerMenu();
         break;
       }
 
@@ -1092,13 +1059,9 @@ function checkfinancialrecords() {
 async function generatereceipt(id:number) {
   console.clear();
   console.log("Generate Receipt functionality");
-  try {
-    const result = await SaleController.generateReceipt(id);
-    if(result.length > 0) console.log(result);
-  }
-  catch(error) {
-    console.error(error);
-  }
+  const result = await SaleController.generateReceipt(id);
+  if(result.length > 0) console.log(result);
+  else console.error("Sale not found");
 }
 
 // customer functions
@@ -1114,68 +1077,42 @@ async function order() {
     switch (action) {
       case "1": {
         console.clear();
-        console.log(auth?.id);
         console.log("Place an order");
         let sales_id:number = Faker.randomInteger(1, 999999999);
         let order_id:number = Faker.randomInteger(1, 999999999);
         let insertMore:string = "y";
         let productName:string;
-        let product:any;
+        let product:Product[];
         let quantity:number;
         let total_amount:number = 0;
         let inserted:boolean = false;
         while(insertMore === "y" || insertMore === "Y" || insertMore === "Yes" || insertMore === "yes") {
           while(true) {
             productName = promptSync('Please enter the name of the Product: ');
-            try {
-              product = await ProductController.customerSearch(productName);
-            }
-            catch(error) {
-              console.error(error);
-            }
-            quantity = parseInt(promptSync(`Please enter the quantity [Max: ${product.quantity}]: `));
-            if(product && product.stock_status === 'in stock' && product.quantity > 0 && quantity <= product.quantity) break;
-            else if(product && product.stock_status !== 'in stock' || product.quantity === 0) console.error("Product is out of stock, please input name of another product");
-            else if(product.quantity < quantity) console.error("Not enough quantity, please input again");
+            product = await ProductController.findByName(productName, auth?.id);
+            quantity = parseInt(promptSync(`Please enter the quantity [Max: ${product[0].quantity}]: `));
+            if(product[0] && product[0].stock_status === 'in stock' && product[0].quantity > 0 && quantity <= product[0].quantity) break;
+            else if(product[0] && product[0].stock_status !== 'in stock' || product[0].quantity === 0) console.error("Product is out of stock, please input name of another product");
+            else if(product[0].quantity < quantity) console.error("Not enough quantity, please input again");
             else console.error("Product not found, please input again");
           }
-          total_amount += product.unit_price*quantity;
+          total_amount += product[0].unit_price*quantity;
           if(!inserted) {
-            await SaleController.authInsert(sales_id, product.user_id, total_amount);
+            await SaleController.authInsert(sales_id, product[0].user_id, total_amount);
             await OrderController.insert(order_id, sales_id, auth?.id);
             inserted = true;
           }
-          try {
-            await new Promise((reject, resolve) => {
-              sql.query(`INSERT INTO sales_products (sales_id, product_id, quantity, unit_price, quantity_price) VALUES (?, ?, ?, ?, ?)`, [sales_id, product.id, quantity, product.unit_price, product.unit_price*quantity], function(error, results) {
-                if(error) reject(error);
-                resolve(results);
-              })
-            });
-          }
-          catch(error) {
-            console.error(error);
-          }
-          try {
-            await ProductController.update(product.id, 'quantity', (product.quantity-quantity));
-          }
-          catch(error) {
-            console.error(error);
-          }
-          try {
-            if(product.quantity-quantity === 0) await ProductController.update(product.id, 'stock_status', 'out of stock');
-          }
-          catch(error) {
-            console.error(error);
-          }
+          await new Promise((reject, resolve) => {
+            sql.query(`INSERT INTO sales_products (sales_id, product_id, quantity, unit_price, quantity_price) VALUES (?, ?, ?, ?, ?)`, [sales_id, product[0].id, quantity, product[0].unit_price, product[0].unit_price*quantity], function(error, results) {
+              if(error) reject(error);
+              resolve(results);
+            })
+          });
+          await ProductController.update(product[0].id, 'quantity', (product[0].quantity-quantity));
+          if(product[0].quantity-quantity === 0) await ProductController.update(product[0].id, 'stock_status', 'out of stock');
           insertMore = promptSync("Do you want to add more products? y/n: ");
         }
-        try {
-          await generatereceipt(sales_id);
-        }
-        catch(error) {
-          console.error(error);
-        }
+        generatereceipt(sales_id);
         console.log("Order Placed Successfully... Please note down this Order Number: " + order_id + "\nAnd Receipt Number: " + sales_id);
         promptSync("Press enter key to continue...");
         break;
@@ -1201,7 +1138,7 @@ async function order() {
 
       case "3": {
         console.clear();
-        let orders:any = await OrderController.allByCustomer(auth?.id);
+        let orders:any = OrderController.allByCustomer(auth?.id);
         console.log(orders);
         promptSync("Press enter key to continue...");
         break;
@@ -1213,7 +1150,7 @@ async function order() {
         while(true) {
           id = parseInt(promptSync("Enter Order Number: "));
           if(id >= 1) {
-            order = await OrderController.find(id);
+            order = OrderController.find(id);
             if(order) {
               console.log(order);
               promptSync("Press enter key to continue...");
@@ -1230,7 +1167,7 @@ async function order() {
       case "5": {
         console.clear();
         console.log("exiting");
-        customerMenu();
+        await customerMenu();
         break;
       }
       default: {
@@ -1241,7 +1178,7 @@ async function order() {
   }
 }
 
-function searchProducts() {
+async function searchProducts() {
   while (true) {
     console.log(`Search products...
 (1) search By ID.
@@ -1252,18 +1189,18 @@ function searchProducts() {
     var choice = promptSync("");
     switch (choice) {
       case "1":
-        searchByID();
+        await searchByID();
         break;
       case "2":
-        searchbyname();
+        await searchbyname();
         break;
       case "3":
-        searchbycategory();
+        await searchbycategory();
         break;
       case "4": {
         console.clear();
         console.log("exiting");
-        ownerMenu();
+        await ownerMenu();
         break;
       }
       default:
@@ -1336,13 +1273,9 @@ function managerefunds() {
 async function showAllproducts() {
   console.clear();
   console.log("Showing all products...");
-  try {
-    let products = await ProductController.allByCustomer();
-    console.log(products);
-    promptSync("Press enter key to continue...");
-  }
-  catch(error) {
-    console.error(error);
-  }
+  let products = await ProductController.allByCustomer();
+  console.log(products);
 }
+
+showAllproducts();
 export default role;  
