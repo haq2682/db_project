@@ -82,6 +82,13 @@ const ProductController = {
                 resolve(results);
             })
         })
+    },
+    refund: async (id:number, quantity:number):Promise<void> => {
+        await new Promise((resolve, reject) => {
+            sql.query(`UPDATE products SET quantity=quantity+? WHERE products.id=?`, [quantity, id], function(error, results) {
+                error ? reject(error) : resolve(results);
+            })
+        })
     }
 }
 

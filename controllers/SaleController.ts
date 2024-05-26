@@ -3,22 +3,22 @@ import Faker from "../faker/faker";
 import sql from '../db_config/config';
 
 const SaleController = {
-    all: ():Promise<Sale[]> => {
-        return Sale.all();
+    all: async ():Promise<Sale[]> => {
+        return await Sale.all();
     },
     find: async (id:number):Promise<Sale[]> => {
         return await Sale.find(id);
     },
-    insert: (user_id:number, total_amount:number):void => {
+    insert: async (user_id:number, total_amount:number):Promise<void> => {
         let id = Faker.randomInteger(1, 999999999);
         let newSale = new Sale(id, user_id, total_amount);
-        newSale.save();
+        await newSale.save();
     },
-    update: (id:number, attribute:string, value:unknown):void => {
-        Sale.update(id, attribute, value);
+    update: async (id:number, attribute:string, value:unknown):Promise<void> => {
+        await Sale.update(id, attribute, value);
     },
-    delete: (id:number):unknown => {
-        return Sale.delete(id);
+    delete: async (id:number):Promise<unknown> => {
+        return await Sale.delete(id);
     },
     authInsert: async (id:number, user_id:number|undefined, total_amount:number):Promise<void> => {
         let newSale = new Sale(id, user_id, total_amount);

@@ -45,6 +45,6 @@ const OrderSeeder = async (length:number, dateStart:string, dateEnd:string) => {
     console.log("Order seeding completed");
 }
 
-OrderSeeder(100, '2024-05-19T17:30:20', '2024-06-19T17:30:20');
+OrderSeeder(100, '2020-05-19T17:30:20', '2024-06-19T17:30:20');
 
 export default OrderSeeder;

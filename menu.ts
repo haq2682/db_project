@@ -9,27 +9,9 @@ import SaleController from "./controllers/SaleController";
 import OrderController from "./controllers/OrderController";
 import Sale from "./models/Sale";
 import Order from "./models/Order";
+import ViewController from "./controllers/ViewController";
 var promptSync = prompt();
 let auth:User | undefined;
-
-// Define a function to handle user login
-/*const handleLogin = (userInfo: User) => {
-  const queryString = `SELECT * FROM users WHERE username = '${userInfo.username}' AND password = '${userInfo.password}'`;
-  sql.query(queryString, (error, results) => {
-    if (error) {
-      console.log(error);
-    } else {
-      if (results.length > 0) {
-        auth = true;
-        console.log("login successful");
-      } else {
-        console.log("login failed");
-      }
-    }
-  });
-};*/
-// Simulated database of users
-
 // Function to handle user login
 async function role() {
   console.log(`----ONLINE PHARMACY----
@@ -418,7 +400,13 @@ async function ownerMenu() {
       case "12": {
         console.clear();
         console.log("Manage Refunds");
-        await managerefunds();
+        try {
+          let id = parseInt(promptSync("Enter Sale ID: "));
+          await managerefunds(id);
+        }
+        catch(error) {
+          console.error(error);
+        }
         break;
       }
 
@@ -454,10 +442,9 @@ async function customerMenu() {
     1. Browse Products.
     2. Search Products.
     3. Place Order.
-    4. Apply Refund.
-    5. Login.
-    6. Register.
-    7. exit menu.`);
+    4. Login.
+    5. Register.
+    6. exit menu.`);
 
       const action = promptSync("Select an action: ");
       switch (action) {
@@ -500,23 +487,17 @@ async function customerMenu() {
         }
         case "4": {
           console.clear();
-          console.log("REFUNDING");
-          await refunds();
-          break;
-        }
-        case "5": {
-          console.clear();
           console.log("Login");
           await login();
           break;
         }
-        case "6": {
+        case "5": {
           console.clear();
           console.log("Register");
           await register();
           break;
         }
-        case "7": {
+        case "6": {
           console.clear();
           console.log("Exiting menu...");
           await role();
@@ -1005,54 +986,212 @@ async function supplyorder() {
 async function checkfinancialrecords() {
   console.log("Check Financial Records functionality");
   while (true) {
-    console.log(`(1) Check Monthly Profit.
-(2) Check Yearly Profit.
-(3) Check Monthly Expenditure.
-(4) Check Yearly Expenditure.
-(5) Check Total Sales Per Day.
-(6) Check Total Sales Per Month.
-(7) Exit.`);
+    console.log(`(1) Check Daily Profit.
+    (2) Check Total Daily Profit.
+    (3) Check Total Monthly Profit.
+    (4) Check Total Yearly Profit.
+    (5) Check Profit Between Specific Date and Time.
+    (6) Check Daily Expenditure.
+    (7) Check Total Daily Expenditure.
+    (8) Check Total Monthly Expenditure.
+    (9) Check Total Yearly Expenditure.
+    (10) Check Expenditure Between Specific Date and Time.
+    (11) Check Daily Sales.
+    (12) Check Total Daily Sales.
+    (13) Check Total Monthly Sales.
+    (14) Check Total Yearly Sales.
+    (15) Check Products Sold Between Specific Date and Time.
+    (16) Check Products Sold on Specific Day.
+    (0) Exit.
+    `);
 
-    var choice = promptSync("");
+    var choice = promptSync("Enter your choice: ");
     switch (choice) {
       case "1": {
-        console.log("Check Monthly Profit");
-        // Implement monthly profit checking logic here
+        try {
+          await ViewController.dailyProfit();
+        }
+        catch(error) {
+          console.error(error);
+        }
+        promptSync("Press enter key to continue...");
         break;
       }
       case "2": {
-        console.log("Check Yearly Profit");
-        // Implement yearly profit checking logic here
+        try {
+          await ViewController.totalDailyProfit();
+        }
+        catch(error) {
+          console.error(error);
+        }
+        promptSync("Press enter key to continue...");
         break;
       }
       case "3": {
-        console.log("Check Monthly Expendature");
-        // Implement monthly expendature checking logic here
+        try {
+          await ViewController.totalMonthlyProfit();
+        }
+        catch(error) {
+          console.error(error);
+        }
+        promptSync("Press enter key to continue...");
         break;
       }
       case "4": {
-        console.log("Check Yearly Expendature");
-        // Implement yearly expendature checking logic here
+        try {
+          await ViewController.totalYearlyProfit();
+        }
+        catch(error) {
+          console.error(error);
+        }
+        promptSync("Press enter key to continue...");
         break;
       }
       case "5": {
-        console.log("Check Total Sales Per Day");
-        // Implement total sales per day checking logic here
+        try {
+          let fromDate = promptSync('Enter from date: ');
+          let toDate = promptSync('Enter to date: ');
+          let from:Date = new Date(fromDate);
+          let to:Date = new Date(toDate);
+          await ViewController.profitBetweenDateTime(from, to);
+        }
+        catch(error) {
+          console.error(error);
+        }
+        promptSync("Press enter key to continue...");
         break;
       }
       case "6": {
-        console.log("Check Total Sales Per Month");
-        // Implement total sales per month checking logic here
+        try {
+          await ViewController.dailyPurchase();
+        }
+        catch(error) {
+          console.error(error);
+        }
+        promptSync("Press enter key to continue...");
         break;
       }
       case "7": {
+        try {
+          await ViewController.totalDailyPurchase();
+        }
+        catch(error) {
+          console.error(error);
+        }
+        promptSync("Press enter key to continue...");
+        break;
+      }
+      case "8": {
+        try {
+          await ViewController.totalMonthlyPurchase();
+        }
+        catch(error) {
+          console.error(error);
+        }
+        promptSync("Press enter key to continue...");
+        break;
+      }
+      case "9": {
+        try {
+          await ViewController.totalYearlyPurchase();
+        }
+        catch(error) {
+          console.error(error);
+        }
+        promptSync("Press enter key to continue...");
+        break;
+      }
+      case "10": {
+        try {
+          let fromDate = promptSync('Enter from date: ');
+          let toDate = promptSync('Enter to date: ');
+          let from:Date = new Date(fromDate);
+          let to:Date = new Date(toDate);
+          await ViewController.purchaseBetweenDateTime(from, to);
+        }
+        catch(error) {
+          console.error(error);
+        }
+        promptSync("Press enter key to continue...");
+        break;
+      }
+      case "11": {
+        try {
+          await ViewController.dailySales();
+        }
+        catch(error) {
+          console.error(error);
+        }
+        promptSync("Press enter key to continue...");
+        break;
+      }
+      case "12": {
+        try {
+          await ViewController.totalDailySales();
+        }
+        catch(error) {
+          console.error(error);
+        }
+        promptSync("Press enter key to continue...");
+        break;
+      }
+      case "13": {
+        try {
+          await ViewController.totalMonthlySales();
+        }
+        catch(error) {
+          console.error(error);
+        }
+        promptSync("Press enter key to continue...");
+        break;
+      }
+      case "14": {
+        try {
+          await ViewController.totalYearlyPurchase();
+        }
+        catch(error) {
+          console.error(error);
+        }
+        promptSync("Press enter key to continue...");
+        break;
+      }
+      case "15": {
+        try {
+          let fromDate = promptSync('Enter from date: ');
+          let toDate = promptSync('Enter to date: ');
+          let from:Date = new Date(fromDate);
+          let to:Date = new Date(toDate);
+          await ViewController.saleBetweenDateTime(from, to);
+        }
+        catch(error) {
+          console.error(error);
+        }
+        promptSync("Press enter key to continue...");
+        break;
+      }
+      case "16": {
+        try {
+          let day = promptSync('Enter from date: ');
+          let dayDate:Date = new Date(day);
+          await ViewController.saleOnSpecificDay(dayDate);
+        }
+        catch(error) {
+          console.error(error);
+        }
+        promptSync("Press enter key to continue...");
+        break;
+      }
+      case "0": {
         console.clear();
-        console.log("Exiting..");
+        console.log("Exiting...");
         await customerMenu();
         break;
       }
 
-      // Implement financial records checking logic here
+      default: {
+        console.error("Invalid Option");
+        promptSync("Press enter key to try again...");
+      }
     }
   }
 }
@@ -1112,7 +1251,7 @@ async function order() {
           if(product[0].quantity-quantity === 0) await ProductController.update(product[0].id, 'stock_status', 'out of stock');
           insertMore = promptSync("Do you want to add more products? y/n: ");
         }
-        generatereceipt(sales_id);
+        await generatereceipt(sales_id);
         console.log("Order Placed Successfully... Please note down this Order Number: " + order_id + "\nAnd Receipt Number: " + sales_id);
         promptSync("Press enter key to continue...");
         break;
@@ -1122,25 +1261,36 @@ async function order() {
         console.clear();
         console.log("Cancelling an order");
         let id:number;
-        let order:Order;
-        while(true) {
-          id = parseInt(promptSync("Please enter Order Number: "));
-          if(id >= 1) {
-            order = await OrderController.find(id);
-            if(!order) console.error("Order not found. Please input again");
-            else break;
+        let order:any;
+        try {
+          while(true) {
+            id = parseInt(promptSync("Please enter Order Number: "));
+            if(id >= 1) {
+              order = await OrderController.find(id);
+              if(!order) console.error("Order not found. Please input again");
+              else break;
+            }
           }
+          await OrderController.cancelOrder(id);
+          await managerefunds(order.sales_id);
+          console.log("Order cancelled successfully");
         }
-        await OrderController.cancelOrder(id);
-        console.log("Order cancelled successfully");
+        catch(error) {
+          console.error(error);
+        }
         break;
       }
 
       case "3": {
         console.clear();
-        let orders:any = OrderController.allByCustomer(auth?.id);
-        console.log(orders);
-        promptSync("Press enter key to continue...");
+        try {
+          let orders:any = await OrderController.allByCustomer(auth?.id);
+          console.log(orders);
+          promptSync("Press enter key to continue...");
+        }
+        catch(error) {
+          console.error(error);
+        }
         break;
       }
       case "4": {
@@ -1205,7 +1355,7 @@ async function searchProducts() {
       }
       default:
         console.log("Invalid option.");
-        searchProducts();
+        await searchProducts();
     }
   }
 }
@@ -1260,15 +1410,32 @@ async function searchbycategory() {
   }
 }
 
-function refunds() {
-  const name = promptSync("Enter your name: ");
-  const address = promptSync("Enter your address: ");
-  const contactinfo = promptSync("Enter your contact info: ");
-}
-function managerefunds() {
-  const name = promptSync("Enter your name: ");
-  const address = promptSync("Enter your address: ");
-  const contactinfo = promptSync("Enter your contact info: ");
+async function managerefunds(id:number) {
+  let sale:any;
+  let products_of_sale:any;
+  try {
+    sale = await SaleController.find(id);
+    sale = sale[0];
+    await SaleController.update(sale.id, 'is_refunded', 1);
+    products_of_sale = await new Promise((resolve, reject) => {
+      sql.query(`SELECT * FROM sales_products WHERE sales_id=?`, [sale.id], function(error, result) {
+        error ? reject(error) : resolve(result);
+      });
+    })
+    for(let i = 0; i < products_of_sale.length; i++) {
+      await ProductController.refund(products_of_sale[i].id, products_of_sale[i].quantity);
+    }
+    await new Promise((resolve, reject) => {
+      sql.query(`DELETE FROM sales_products WHERE sales_id=?`, [sale.id], function(error, result) {
+        error ? reject(error) : resolve(result);
+      })
+    })
+    console.log('Refund processed successfully');
+    promptSync("Press enter key to continue...");
+  }
+  catch(error) {
+    console.error(error);
+  }
 }
 async function showAllproducts() {
   console.clear();
@@ -1276,6 +1443,4 @@ async function showAllproducts() {
   let products = await ProductController.allByCustomer();
   console.log(products);
 }
-
-showAllproducts();
 export default role;  

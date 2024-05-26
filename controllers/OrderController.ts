@@ -4,7 +4,7 @@ const OrderController = {
     all: ():Promise<unknown> => {
         return Order.all();
     },
-    find: async (id:number):Promise<Order> => {
+    find: async (id:number):Promise<any> => {
         return await Order.find(id);
     },
     insert: async (id:number, sales_id:number, user_id:number|undefined):Promise<void> => {
@@ -27,7 +27,7 @@ const OrderController = {
     },
     allByCustomer: async (id:number|undefined):Promise<any> => {
         return new Promise((resolve, reject) => {
-            sql.query(`select *, orders.id from orders inner join users on orders.user_id=users.id inner join sales on orders.sales_id=sales.id inner join sales_products on sales.id=sales_products.sales_id inner join products on sales_products.product_id=products.id WHERE orders.user_id=?`, function(error, results) {
+            sql.query(`select *, orders.id from orders inner join users on orders.user_id=users.id inner join sales on orders.sales_id=sales.id inner join sales_products on sales.id=sales_products.sales_id inner join products on sales_products.product_id=products.id WHERE orders.user_id=?`, [id], function(error, results) {
                 if(error) reject(error);
                 resolve(results);
             });

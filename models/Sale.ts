@@ -52,7 +52,7 @@ class Sale {
 
     public static async find(id:number):Promise<Sale[]> {
         return new Promise((resolve) => {
-            sql.query(`select *, sales.id from sales where id=? inner join users on sales.user_id=users.id`, [id], (error, results) => {
+            sql.query(`select *, sales.id from sales inner join users on sales.user_id=users.id where sales.id=?`, [id], (error, results) => {
                 if(error) {
                     console.error("Error fetching sales: ", error.sqlMessage);
                     return;
