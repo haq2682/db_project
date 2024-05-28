@@ -3,6 +3,7 @@ import sql from "./db_config/config";
 import User from "./models/User";
 import UserController from "./controllers/UserController";
 import ProductController from "./controllers/ProductController";
+import SupplyOrderController from "./controllers/SupplyOrderController";
 import Product from "./models/Product";
 import Faker from './faker/faker';
 import SaleController from "./controllers/SaleController";
@@ -10,6 +11,7 @@ import OrderController from "./controllers/OrderController";
 import Sale from "./models/Sale";
 import Order from "./models/Order";
 import ViewController from "./controllers/ViewController";
+import SupplyOrder from "./models/SupplyOrder";
 var promptSync = prompt();
 let auth:User | undefined;
 // Function to handle user login
@@ -904,6 +906,7 @@ async function managesales() {
       }
 
       case "4": {
+        console.clear();
         console.log("Find  Sale records");
         let id:number;
         let sale:Sale[];
@@ -947,34 +950,110 @@ async function supplyorder() {
   while (true) {
     console.log(`(1) Add a Supply Order.
     (2) Remove a Supply Order.
-    (3) Edit a Supply Order.
-    (4) View Supply Orders .
-    (6) Find supply Order Record.
+    (3) View Supply Orders .
+    (4) Find supply Order Record.
     (5) Exit.`);
 
     var choice = promptSync("Enter your choice: ");
     switch (choice) {
       case "1": {
+        console.clear();
         console.log("Add a Supply Order");
-        // Implement supply order logic here
+        let id:number = Faker.randomInteger(1, 999999999);
+        let insertMore:string = "y";
+        let productName:string;
+        let product:Product[];
+        let product_id:number;
+        let product_price:number;
+        let quantity:number;
+        let inserted:boolean = false;
+        while(insertMore === "y" || insertMore === "Y" || insertMore === "Yes" || insertMore === "yes") {
+          while(true) {
+            productName = promptSync('Please enter the name of the item: ');
+            if(productName.length>=1) break;
+          }
+            product = await ProductController.findByName(productName, auth?.id);
+            if(product[0]) {
+              product_id = product[0].id;
+              product_price = product[0].unit_price;
+            }
+            else {
+              product_id = 0;
+              product_price = parseFloat(promptSync('Enter item\'s unit price: '));
+            }
+            quantity = parseInt(promptSync('How many units do you want to order?: '));
+          if(!inserted) {
+            await SupplyOrderController.authInsert(id, auth?.id);
+            inserted = true;
+          }
+          await new Promise((reject, resolve) => {
+            sql.query(`INSERT INTO items (item_name, item_price, product_id) VALUES (?, ? ,?)`, [productName, product_price, product_id], function(error, results) {
+              error ? reject(error) : resolve(results);
+            });
+          })
+          await new Promise((reject, resolve) => {
+            sql.query(`INSERT INTO supplyorders_items (supplyOrder_id, item_id, item_quantity) VALUES (?, ?, ?)`, [id, product_id, quantity, product[0].unit_price*quantity], function(error, results) {
+              if(error) reject(error);
+              resolve(results);
+            })
+          });
+          insertMore = promptSync("Do you want to add more products? y/n: ");
+        }
+        await SupplyOrderController.generateReceipt(id);
+        console.log("Products ordered successfully");
+        promptSync("Press enter key to continue...");
+        break;
       }
       case "2": {
+        console.clear();
         console.log("Remove a Supply Order");
-        // Implement supply order logic here
+        let id:number;
+        let order:SupplyOrder[];
+        while(true) {
+          id = parseInt(promptSync("Enter the id of the supply order you want to delete: "));
+          if(id >= 1) break;
+        }
+        order = await SupplyOrderController.find(id);
+        if(order.length === 0) {
+          console.error("Supply Order does not exist");
+        }
+        else {
+          await SupplyOrderController.delete(order[0].id);
+          console.log("Delete successful");
+        }
+        promptSync("Press enter key to continue...");
       }
       case "3": {
-        console.log("Edit a Supply Order");
-        // Implement supply order logic here
+        console.clear();
+        console.log("View Supply Orders");
+        let orders:SupplyOrder[] = await SupplyOrderController.all();
+        if(orders.length === 0) {
+          console.error("There is no supply ordered yet");
+        }
+        else {
+          console.log(orders);
+        }
+        promptSync("Press enter key to continue...");
       }
       case "4": {
-        console.log("View Supply Orders");
-        // Implement supply order logic here
+        console.clear();
+        console.log("Find supply Order Record");
+        let id:number;
+        let order:SupplyOrder[];
+        while(true) {
+          id = parseInt(promptSync("Enter the id of the supply order you want to find: "));
+          if(id >= 1) break;
+        }
+        order = await SupplyOrderController.find(id);
+        if(order.length === 0) {
+          console.error("Supply Order does not exist");
+        }
+        else {
+          console.log(order);
+        }
+        promptSync("Press enter key to continue...");
       }
       case "5": {
-        console.log("Find supply Order Record");
-        // Implement supply order logic here
-      }
-      case "6": {
         console.clear();
         console.log("Exiting ...");
         await ownerMenu();
@@ -1443,4 +1522,5 @@ async function showAllproducts() {
   let products = await ProductController.allByCustomer();
   console.log(products);
 }
+checkfinancialrecords();
 export default role;  
